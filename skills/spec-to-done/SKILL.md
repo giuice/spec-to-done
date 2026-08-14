@@ -1,0 +1,45 @@
+---
+name: spec-to-done
+description: Use for substantial create, build, implement, launch, redesign, migrate, or end-to-end outcomes and to resume their SPEC-to-REPORT work. Do not use for an explicitly requested single stage or a trivial reversible one-outcome change with no product, migration, data, security, integration, or new failure behavior; when unsure, use this skill.
+---
+
+# Spec to Done
+
+## Composite ownership
+
+Own **SPECIFY → PLAN → EXECUTE ↔ REPLAN → REPORT** using only this tree. Never invoke another skill or ask the user to invoke a stage. Name the selected local reference, read it completely, apply it, return here, inspect again, and continue automatically. Pause only for a real interview answer, smallest ambiguity decision, authority, credentials, or external state.
+
+## Artifact-first lookup and boundary
+
+Derive a kebab-case slug and inspect `spec-interview/<slug>/` first. SPEC, state, rounds, PLAN, TRACK, and REPORT belong only under that directory—never at the workspace root. Product deliverables stay at their contract paths. Match stored Goal, SPEC summary, or interview restatement to the actual request, not just the slug. A different goal receives a distinct folder; uncertain identity needs the smallest decision. Preserve malformed, premature, partial, and conflicting evidence—never delete, overwrite, or silently repair it.
+
+Honor an explicit stage-only request. Otherwise any substantial new work begins with Specify, including a detailed brief or handoff. Only an explicitly supplied SPEC/PRD that passes the complete readiness audit bypasses Specify. Trivial means reversible + one outcome + no product, migration, data, security, integration, or new failure behavior; doubt specifies. For unclear non-product discussion with no checkable outcome, clarify only done, must-not-happen, and constraints; do not force a product interview.
+
+## Artifact-state routing
+
+Use ordinary inspection of artifacts, timestamps, contents, statuses, and checkpoints. First applicable row wins.
+
+| State | Declared outcome |
+|---|---|
+| Empty substantial work | Read `references/specify.md` completely; specify. |
+| Interview rounds/state without a Ready SPEC | Read `references/specify.md` completely; preserve and resume. |
+| Explicit supplied SPEC/PRD | Read `references/specify.md` completely; audit. Ready proceeds to Plan; incomplete stays in Specify and must not route to Plan. |
+| Ready SPEC only | Read `references/plan.md` completely; plan. |
+| SPEC + future PLAN, with or without TRACK | Read `references/execute.md` completely; execute, checkpoint, or replan as state requires. |
+| No remaining task / terminal execution state | Read `references/report.md` completely; report. |
+| Current REPORT and unchanged earlier artifacts | Terminal/current: state outcome, do not redo work. |
+| REPORT stale because an earlier artifact or implementation evidence changed | Preserve stale REPORT; select the next active stage from current artifacts. |
+| PLAN/TRACK/implementation without a Ready SPEC | Preserve all evidence; read `references/specify.md` completely. Replan waits for Ready. |
+| Malformed or contradictory artifacts, multiple goals, uncertain identity | Preserve evidence and ask the smallest resolving decision. |
+| Exhausted blocker | Read `references/execute.md` completely only after a matching blocker resolution is verified or explicitly attested; otherwise read `references/report.md` completely. |
+
+A detailed handoff is not a Ready SPEC. Completion follows through the reporter, never a silent stop.
+
+## Continuation and safety
+
+After every selected reference return here and route again. Execute reads the local plan reference for replanning and the local report reference for every terminal route; both are internal continuation, not cross-skill handoff. TRACK is the sole execution record and its task records, corrections, and gate checkpoints are append-only. Before a destructive or irreversible action, preserve evidence, ask for authority, and report the blocker rather than proceeding.
+
+On a terminal route, treat the report body as a single immutable output: persist it after the `REPORT.md` header, then emit that exact body byte-for-byte as the developer response. Do not reconstruct, paraphrase, prefix, suffix, or replace it with routing, execution, or validation narration.
+
+## Full protocol
+Full retains Bounded's T1 + T2/T3 limit and T4 prohibition. Use a stable `Blocker: BLK-<slug>-<root-task-id>`. Reopen only a matching exhausted blocker after verified or explicitly attested resolution, append evidence and a new episode checkpoint, and preserve history. Reconcile execution→TRACK, TRACK→gate, and gate→PLAN before future work; never repeat a recorded ID or completed side effect.

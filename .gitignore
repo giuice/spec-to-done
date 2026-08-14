@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.tmp
+*.temp
+
+# Local development workbench. Preserve on disk; do not publish with the Skill.
+/.vscode/
+/AGENTS.md
+/docs/
+/evaluation/
+/legacy/
+/preservation/
+/spec-interview/
+/tests/

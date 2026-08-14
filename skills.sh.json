@@ -1,0 +1,13 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Long-Horizon Execution",
+      "description": "A self-contained workflow that carries substantial work through SPECIFY → PLAN → EXECUTE ↔ REPLAN → REPORT and preserves durable state across sessions.",
+      "skills": [
+        "spec-to-done"
+      ]
+    }
+  ]
+}
