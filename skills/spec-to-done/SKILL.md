@@ -12,6 +12,8 @@ Own **SPECIFY → PLAN → EXECUTE ↔ REPLAN → REPORT** using only this tree.
 ## Artifact-first lookup and boundary
 
 Derive a kebab-case slug and inspect `spec-interview/<slug>/` first. SPEC, state, rounds, PLAN, TRACK, and REPORT belong only under that directory—never at the workspace root. Product deliverables stay at their contract paths. Match stored Goal, SPEC summary, or interview restatement to the actual request, not just the slug. A different goal receives a distinct folder; uncertain identity needs the smallest decision. Preserve malformed, premature, partial, and conflicting evidence—never delete, overwrite, or silently repair it.
+Each work's `state.md` opens with `Status: active | frozen | closed`: at most one `active` repository-wide, `frozen` preserved as documentation only, `closed` terminal after its report.
+The root writes this line on entry and updates it on terminal exit; naming a `frozen` or `closed` work makes it `active` and freezes the previously active one, stated rather than assumed.
 
 Honor an explicit stage-only request. Otherwise any substantial new work begins with Specify, including a detailed brief or handoff. Only an explicitly supplied SPEC/PRD that passes the complete readiness audit bypasses Specify. Trivial means reversible + one outcome + no product, migration, data, security, integration, or new failure behavior; doubt specifies. For unclear non-product discussion with no checkable outcome, clarify only done, must-not-happen, and constraints; do not force a product interview.
 
@@ -21,6 +23,7 @@ Use ordinary inspection of artifacts, timestamps, contents, statuses, and checkp
 
 | State | Declared outcome |
 |---|---|
+| `state.md` Status is `frozen` or `closed`, and the request does not name that work | Documentation only: do not route into it, advance it, or reuse its slug. |
 | Empty substantial work | Read `references/specify.md` completely; specify. |
 | Interview rounds/state without a Ready SPEC | Read `references/specify.md` completely; preserve and resume. |
 | Explicit supplied SPEC/PRD | Read `references/specify.md` completely; audit. Ready proceeds to Plan; incomplete stays in Specify and must not route to Plan. |
