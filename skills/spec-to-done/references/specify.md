@@ -8,13 +8,13 @@ Turn an unclear product idea into a complete, assumption-light Product SPEC. Thi
 
 The core job is not writing first; it is discovering what must be true before a useful SPEC can exist. A polished SPEC built on hidden assumptions is worse than no SPEC because it makes uncertainty look settled. Never answer an interview question for the user: extract facts they already supplied, distinguish them from unresolved decisions, and ask about the latter.
 
-Every substantial new run uses this stage. The sole bypass is an explicitly supplied `SPEC` or `PRD` whose content passes the complete readiness audit below; a detailed handoff, filename, prior conversation, or asserted provenance is not proof that a contract is complete.
+Every substantial new run uses this stage. The sole bypass is procedural, not qualitative: `spec-interview/<slug>/state.md` already records per-domain coverage and `Verdict: Ready`, which only this stage writes. A supplied document, detailed handoff, filename, prior conversation, or asserted provenance is not proof that a contract is complete.
 
 ## Resume, supplied contract, or new interview
 
 Derive a short kebab-case slug and use `spec-interview/<slug>/`. If its `state.md` or prior round files exist, read them first, preserve answered material, and ask only the remaining or newly unlocked questions. If an existing folder belongs to a different goal, choose a distinct slug or ask the user before touching it.
 
-When the user explicitly supplies a `SPEC` or `PRD`, first audit its content with the hard readiness gate in step 5. Record the extracted answers, domain coverage, individual gate results, and verdict in `state.md`; do not trust its name or source. A `Ready` supplied contract may be persisted or referenced as `spec-interview/<slug>/SPEC.md` and returned to the composite root for continuation. If it is not ready, preserve all known facts, ask only the missing or ambiguous questions, and do not plan or implement. A detailed brief without an explicit supplied `SPEC` or `PRD` follows the interview path, even if it appears comprehensive.
+A supplied `SPEC`, `PRD`, plan, or prior context is interview input, not a contract. Extract everything it already answers, record each extracted answer beside the passage it came from in `state.md`, and ask only the missing or ambiguous questions: a thorough document earns a short interview, never no interview. Do not persist it as `SPEC.md`, and do not plan or implement on its strength. However complete it looks, it cannot bypass this stage, because the bypass is satisfied by this stage's recorded coverage, not by a document.
 
 Otherwise, restate the raw idea in one or two sentences, create the working directory, detect whether the project produces code, and begin round 1.
 
@@ -153,6 +153,8 @@ Before writing or accepting `SPEC.md`, explicitly record this check in `state.md
 Verdict: Ready / Not ready
 ```
 
+Mark an item `Pass` only when you can cite the specific answer or supplied passage that satisfies it, and record that citation beside the item. An item you cannot cite is `Missing`, however strongly the surrounding material seems to imply it.
+
 If any item is `Missing`, the verdict is `Not ready`: run another round instead of drafting or accepting the final SPEC. If the user asks to draft early, decline a final SPEC and offer continued interview, clearly labeled `Discovery Notes` (not a SPEC), or a narrower scope that could pass the gate. Pause only for actual interview answers or another required user decision, authority, credentials, or external action.
 
 ## 5. Write the final SPEC only when ready
@@ -282,4 +284,4 @@ If the user is domain-expert, ask sharper business-rule and edge-case questions 
 
 If the user is overwhelmed, keep the round small (3-5 questions) and remind them that they can answer by clicking options and adding a note.
 
-If the user gives a large existing brief, extract what is already answered first, then build the round around the gaps only. It does not bypass the readiness audit unless it is explicitly supplied as a SPEC or PRD.
+If the user gives a large existing brief, extract what is already answered first, then build the round around the gaps only. It does not bypass the interview.

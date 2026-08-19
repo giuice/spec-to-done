@@ -15,7 +15,7 @@ Derive a kebab-case slug and inspect `spec-interview/<slug>/` first. SPEC, state
 Each work's `state.md` opens with `Status: active | frozen | closed`: at most one `active` repository-wide, `frozen` preserved as documentation only, `closed` terminal after its report.
 The root writes this line on entry and updates it on terminal exit; naming a `frozen` or `closed` work makes it `active` and freezes the previously active one, stated rather than assumed.
 
-Honor an explicit stage-only request. Otherwise any substantial new work begins with Specify, including a detailed brief or handoff. Only an explicitly supplied SPEC/PRD that passes the complete readiness audit bypasses Specify. Trivial means reversible + one outcome + no product, migration, data, security, integration, or new failure behavior; doubt specifies. For unclear non-product discussion with no checkable outcome, clarify only done, must-not-happen, and constraints; do not force a product interview.
+Honor an explicit stage-only request. Otherwise any substantial new work begins with Specify, including a detailed brief or handoff. A supplied SPEC, PRD, plan, or prior context is interview input, not a contract: Specify is bypassed only when `spec-interview/<slug>/state.md` already records per-domain coverage and `Verdict: Ready`, which only Specify writes. Otherwise extract what it already answers and interview the gaps. Trivial means reversible + one outcome + no product, migration, data, security, integration, or new failure behavior; doubt specifies. For unclear non-product discussion with no checkable outcome, clarify only done, must-not-happen, and constraints; do not force a product interview.
 
 ## Artifact-state routing
 
@@ -26,7 +26,7 @@ Use ordinary inspection of artifacts, timestamps, contents, statuses, and checkp
 | `state.md` Status is `frozen` or `closed`, and the request does not name that work | Documentation only: do not route into it, advance it, or reuse its slug. |
 | Empty substantial work | Read `references/specify.md` completely; specify. |
 | Interview rounds/state without a Ready SPEC | Read `references/specify.md` completely; preserve and resume. |
-| Explicit supplied SPEC/PRD | Read `references/specify.md` completely; audit. Ready proceeds to Plan; incomplete stays in Specify and must not route to Plan. |
+| Supplied SPEC/PRD/plan/context without this workflow's `state.md` readiness record | Read `references/specify.md` completely; treat it as interview input and specify. Never route it to Plan on its own strength. |
 | Ready SPEC only | Read `references/plan.md` completely; plan. |
 | SPEC + future PLAN, with or without TRACK | Read `references/execute.md` completely; execute, checkpoint, or replan as state requires. |
 | No remaining task / terminal execution state | Read `references/report.md` completely; report. |
