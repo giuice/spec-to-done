@@ -82,7 +82,7 @@ It keeps going until the outcome is verified or it hits something that genuinely
 
 ### Optional: a single stage
 
-If you explicitly ask for one stage only, that request is honored and the rest of the workflow is not started.
+If you explicitly ask for one stage only, that request sets where the workflow stops. It does not skip the stages before it: asking for a plan when no SPEC is ready runs the interview first, then the plan, and then stops.
 
 ## What it does
 
