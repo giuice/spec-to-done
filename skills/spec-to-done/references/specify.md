@@ -108,7 +108,15 @@ Skip the test-strategy domain entirely for non-code deliverables.
 
 ## 3. Track knowns and unknowns
 
-After each round, persist answers to `spec-interview/<slug>/state.md` so progress survives a dropped chat. Rewrite the whole file each round. It begins with the scope restatement from the first step so a later session can identify the work from the file alone, then contains answers grouped by domain and this current-state view:
+After each round, persist answers to `spec-interview/<slug>/state.md` so progress survives a dropped chat. Rewrite the whole file each round.
+
+**Every rewrite preserves `Status:` as the first line, byte for byte.** The composite root owns that line and is the only writer of its value; this stage carries it forward unchanged and never removes, rewrites, or silently repairs it. A rewrite that drops it destroys the repository-wide record of which work is active. The scope restatement from the first step follows it, so a later session can identify the work from the file alone, and then come the answers grouped by domain and this current-state view:
+
+```text
+Status: active | frozen | closed
+
+<scope restatement>
+```
 
 ```markdown
 ## Current understanding

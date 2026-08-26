@@ -14,7 +14,7 @@ This skill is domain-neutral: it executes code work, research, writing, operatio
 
 ```
 spec-interview/<slug>/
-  SPEC.md      the contract      (read-only here; may be absent â€” then PLAN.md is the contract)
+  SPEC.md      the contract      (read-only here; may be absent — then PLAN.md is the contract)
   PLAN.md      the strategy      (read; replaced by references/plan.md)
   TRACK.md    the record        (you are the only writer)
   REPORT.md    written by references/report.md
@@ -24,11 +24,11 @@ spec-interview/<slug>/
 
 Pick per task, in this order:
 
-**Delegated (default).** One subagent per task. Costs more total tokens â€” the subagent re-reads context you already hold â€” and buys two things worth more: your context stays clean, so a long run never hits lossy compaction; and the track becomes the only memory channel between tasks, which is what keeps it honest. A track written inline duplicates your context and quietly rots.
+**Delegated (default).** One subagent per task. Costs more total tokens — the subagent re-reads context you already hold — and buys two things worth more: your context stays clean, so a long run never hits lossy compaction; and the track becomes the only memory channel between tasks, which is what keeps it honest. A track written inline duplicates your context and quietly rots.
 
-**Inline.** When the host provides no subagents, when the user asks for it, or when the whole plan is two trivial tasks. Everything else in this skill is unchanged â€” including verifying the postcondition as a separate act from doing the work.
+**Inline.** When the host provides no subagents, when the user asks for it, or when the whole plan is two trivial tasks. Everything else in this skill is unchanged — including verifying the postcondition as a separate act from doing the work.
 
-**Human handoff.** When the task must be performed by a person or outside your reach â€” a physical action, an approval, an access grant. Present the task, its `Done when`, and what evidence you need in plain language; never hand a person the structured return contract below. Ask only: did it happen, what is now true, and anything unexpected. **You** turn that answer into the track entry, recording it as `attested`. Never mark such a task done on the assumption it happened.
+**Human handoff.** When the task must be performed by a person or outside your reach — a physical action, an approval, an access grant. Present the task, its `Done when`, and what evidence you need in plain language; never hand a person the structured return contract below. Ask only: did it happen, what is now true, and anything unexpected. **You** turn that answer into the track entry, recording it as `attested`. Never mark such a task done on the assumption it happened.
 
 ---
 
@@ -36,26 +36,26 @@ Pick per task, in this order:
 
 ```
 read contract + PLAN + TRACK
-   â”‚
-   â–¼
-select next task â”€â”€â”€â”€ none left â”€â”€â”€â”€â–º invoke references/report.md
-   â”‚
-   â–¼
-does its postcondition already hold? â”€â”€ yes â”€â”€â”
-   â”‚ no                                       â”‚
-   â–¼                                          â”‚
-dispatch (delegated / inline / human)         â”‚
-   â”‚                                          â”‚
-   â–¼                                          â”‚
-verify against observable state               â”‚   â—„â”€â”€ you do this, not the performer
-   â”‚                                          â”‚
-   â–¼                                          â–¼
-append track entry â—„â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
-   â”‚
-   â–¼
-replan gate â”€â”€â”€â”€ plan still true â”€â”€â”€â”€â–º next task
-   â”‚
-   â””â”€â”€ plan invalid â”€â”€â–º invoke references/plan.md in replan mode
+   |
+   v
+select next task ---- none left ----> invoke references/report.md
+   |
+   v
+does its postcondition already hold? -- yes --+
+   | no                                       |
+   v                                          |
+dispatch (delegated / inline / human)         |
+   |                                          |
+   v                                          |
+verify against observable state               |   <-- you do this, not the performer
+   |                                          |
+   v                                          v
+append track entry <-------------------------+
+   |
+   v
+replan gate ---- plan still true ----> next task
+   |
+   +-- plan invalid --> invoke references/plan.md in replan mode
 
 Every path reaches the track and then the gate. No status skips either.
 ```
@@ -76,8 +76,8 @@ This costs one cheap check and closes the gap where a previous run was interrupt
 
 Which status you record depends on **why** the condition holds:
 
-- Nothing ever attempted this task â€” it was already true â†’ `no_op`.
-- A previous run may have acted and died before recording â†’ `done`, with the observed state delta and a note that it was reconstructed after an interruption. Recording that as `no_op` would erase a real change from the record.
+- Nothing ever attempted this task — it was already true → `no_op`.
+- A previous run may have acted and died before recording → `done`, with the observed state delta and a note that it was reconstructed after an interruption. Recording that as `no_op` would erase a real change from the record.
 
 When you cannot tell the two apart, assume the second. Losing a state delta is worse than over-reporting one.
 
@@ -87,18 +87,18 @@ The performer starts cold, so the brief must stand alone. Send exactly this:
 
 ```markdown
 ## Task
-<the full task block from PLAN.md â€” T-id, Task, Done when, Verify by, Covers>
+<the full task block from PLAN.md — T-id, Task, Done when, Verify by, Covers>
 
 ## Goal context
 <the one-sentence goal from PLAN.md>
 
 ## Constraints that apply
-<constraints, business rules, and non-goals from the contract that bear on this task â€”
+<constraints, business rules, and non-goals from the contract that bear on this task —
 not the whole contract>
 
 ## Established facts
-<the [verified] Discovered entries from TRACK.md that this task depends on â€”
-identities, paths, versions, decisions already made â€” plus any fact from the task's
+<the [verified] Discovered entries from TRACK.md that this task depends on —
+identities, paths, versions, decisions already made — plus any fact from the task's
 Reasoning the performer needs; for T1, the grounding observation. A fact still
 [reported, unconfirmed] is not established: confirm it first, or pass it explicitly
 labeled as an unconfirmed report>
@@ -110,7 +110,7 @@ status: done | partial | blocked | failed | no_op
 state_delta:
 - <what is observably different now, and its consequence>
 evidence:
-- <check performed> â†’ <result>
+- <check performed> → <result>
 discovered:
 - <fact that later tasks need; omit the section if none>
 unresolved:
@@ -122,7 +122,7 @@ user_action:
 deviation: <how the executed work differs from the task as written, and why; omit if none>
 
 Rules:
-- Report state, not activity. "Requests over 30s now fail" â€” not "I edited the client".
+- Report state, not activity. "Requests over 30s now fail" — not "I edited the client".
 - Do not claim a check you did not run.
 - A `discovered` item names what you observed and where, so it can be confirmed.
 - Use `no_op` if the postcondition was already satisfied before you started.
@@ -135,9 +135,9 @@ Rules:
 
 Give the performer the smallest slice of the contract that matters. Dumping the whole SPEC into every brief defeats the purpose of dispatching.
 
-The brief deliberately omits the task's `Reasoning` â€” that is the planner's justification, not an instruction. If the reasoning contains a fact the performer needs, that fact belongs in `Established facts`.
+The brief deliberately omits the task's `Reasoning` — that is the planner's justification, not an instruction. If the reasoning contains a fact the performer needs, that fact belongs in `Established facts`.
 
-### 4. Verify â€” do not take the performer's word
+### 4. Verify — do not take the performer's word
 
 The performer is not the judge of its own success. Before writing the track, check the postcondition yourself against observable state:
 
@@ -145,7 +145,7 @@ The performer is not the judge of its own success. Before writing the track, che
 - Confirm the `Done when` condition actually holds now.
 - If `done` was claimed but the postcondition does not hold, record `failed` with the discrepancy. Do not soften it.
 
-Extend the same skepticism to `discovered:` items â€” they become later tasks' input and the replanner's premises. Confirm each one against observable state when a cheap check exists and record it `[verified]`; when you cannot, record it `[reported, unconfirmed]`. An unconfirmed discovery is a hypothesis, not a fact.
+Extend the same skepticism to `discovered:` items — they become later tasks' input and the replanner's premises. Confirm each one against observable state when a cheap check exists and record it `[verified]`; when you cannot, record it `[reported, unconfirmed]`. An unconfirmed discovery is a hypothesis, not a fact.
 
 Label the verification, because the reporter depends on the distinction:
 
@@ -168,24 +168,24 @@ Append to `spec-interview/<slug>/TRACK.md`. The rendering below is preferred hum
 ```markdown
 # TRACK: <slug>
 
-## T1 â€” Payment client timeout  [done]
+## T1 — Payment client timeout  [done]
 Plan version: 1
 Covers: FR-004, AC-002
 State delta:
 - Outbound payment requests now fail after 30 seconds instead of hanging indefinitely.
 Evidence:
-- integration test PaymentTimeoutTests â†’ passed
+- integration test PaymentTimeoutTests → passed
 Verification: verified
 Gate: plan holds
 
-## T2 â€” Product endpoint cache  [partial]
+## T2 — Product endpoint cache  [partial]
 Plan version: 1
 Covers: FR-007, AC-005
 State delta:
 - The cache abstraction exists and the product endpoint reads through it.
 Evidence:
-- unit tests â†’ passed (14)
-- production Redis behavior â†’ not checked, no access to that environment
+- unit tests → passed (14)
+- production Redis behavior → not checked, no access to that environment
 Verification: unverified
 Discovered:
 - [verified] The product endpoint is also called by the reporting job, which expects fresh data.
@@ -203,12 +203,12 @@ TRACK rules:
 - **Semantic content is mandatory; canonical decoration is not.** Every task record contains task identity, status, plan version, coverage, state delta, evidence, verification, and every applicable discovery, unresolved item, risk, user action, or deviation. Associate each task with exactly one Gate either in that task record or in a subsequent checkpoint that names the task. `### Gate checkpoint — <task ID>` is recommended style, not a semantic Must.
 
 - **Append every task entry and every gate checkpoint.** `TRACK.md` is append-only: never edit a prior task or checkpoint. After each task entry append `### Gate checkpoint — <task ID>` with plan version, evidence, and one Gate: `plan holds`, `replan required`, `replan done (plan version N)`, or `replan exhausted`. A later fact is a correction checkpoint naming the affected task; history is never rewritten.
-- **On a run with no `Covers`** â€” no SPEC, so the contract is the union of the plan's `Done when` â€” copy the task's `Done when` into the entry instead, along with its `Restates:` line when present. Completed tasks leave the plan, so this is the only place the satisfied part of the contract survives.
+- **On a run with no `Covers`** — no SPEC, so the contract is the union of the plan's `Done when` — copy the task's `Done when` into the entry instead, along with its `Restates:` line when present. Completed tasks leave the plan, so this is the only place the satisfied part of the contract survives.
 
 - **Write it after every task, never reconstruct it at the end.** A track rebuilt from memory at the end of a long run is exactly the semantic loss this workflow exists to prevent.
 - **Copy `Covers` verbatim from the plan.** It is the only path from task evidence back to acceptance criteria once the task leaves the plan. Omit when the plan has no `Covers`.
-- **Every `Discovered` item carries its provenance label** â€” `[verified]` when you confirmed it against observable state, `[reported, unconfirmed]` when it is only the performer's claim. Briefs, replans, and the gate treat the two differently, so an unlabeled discovery is a format error.
-- **State over activity.** "Authentication now rejects expired tokens" â€” not "edited AuthService". Filenames are optional traceability, appended after the consequence.
+- **Every `Discovered` item carries its provenance label** — `[verified]` when you confirmed it against observable state, `[reported, unconfirmed]` when it is only the performer's claim. Briefs, replans, and the gate treat the two differently, so an unlabeled discovery is a format error.
+- **State over activity.** "Authentication now rejects expired tokens" — not "edited AuthService". Filenames are optional traceability, appended after the consequence.
 - **Evidence, not reasoning.** Record what was checked and what it returned. Do not record deliberation.
 - **Record deviations honestly.** A silent deviation becomes a hidden contract change.
 - **Destructive or irreversible actions and changes to user data are always state deltas.** Never leave one implicit.
@@ -221,10 +221,10 @@ TRACK rules:
 
 | Status | TRACK | Then |
 |---|---|---|
-| `done` | record with verification label | replan gate â†’ next task |
-| `no_op` | record with the evidence that it was already true | replan gate â†’ next task |
-| `partial` | record, with `Unresolved` filled | replan gate **must** run â€” the remainder needs a new task |
-| `blocked` | record, with the blocker and any `user_action` | replan gate **must** run; if it cannot route around it â†’ report |
+| `done` | record with verification label | replan gate → next task |
+| `no_op` | record with the evidence that it was already true | replan gate → next task |
+| `partial` | record, with `Unresolved` filled | replan gate **must** run — the remainder needs a new task |
+| `blocked` | record, with the blocker and any `user_action` | replan gate **must** run; if it cannot route around it → report |
 | `failed` | record, with the discrepancy | replan gate **must** run |
 
 ### 7. Replan gate
@@ -269,7 +269,7 @@ Never stop silently. Every exit goes through the reporter.
 
 ## Escalation
 
-Stop and ask the user â€” do not decide alone â€” when:
+Stop and ask the user — do not decide alone — when:
 
 - an acceptance criterion has become unreachable;
 - an action would be destructive or irreversible and the user has not explicitly asked for it;
@@ -300,7 +300,7 @@ Do not re-run completed tasks. Re-verify a completed task only when a later disc
 
 **Activity tracks.** Entries that list what was touched instead of what became true. The report cannot be built from those.
 
-**Skipping the replan gate when things are going well.** The plan is most often wrong exactly when execution feels smooth â€” because nothing has forced you to look at it.
+**Skipping the replan gate when things are going well.** The plan is most often wrong exactly when execution feels smooth — because nothing has forced you to look at it.
 
 **Fixing the plan inline.** When the plan is wrong, invoke the replanner. Silently doing something other than what the plan says produces a run nobody can audit.
 
@@ -311,4 +311,4 @@ Do not re-run completed tasks. Re-verify a completed task only when a later disc
 
 Every replan continuation has `Continues: <root task ID>`.
 
-Full includes Bounded's root T1 plus only continuation T2/T3 limit; T4 is forbidden. Its checkpoints expose `root_attempts: 1`, `continuation_attempts: 0–2`, `continuation_limit: 2`, `total_lineage_attempts: 1–3`, and `total_lineage_limit: 3`. A blocked or failed lineage records and reuses `Blocker: BLK-<slug>-<root-task-id>`. An exhausted episode may reopen only after ordinary inspection verifies, or the user explicitly attests, resolution of that same blocker. Append the evidence and a `replan reopened (plan version N)` checkpoint, preserve prior history, and start a new `Reopens:` episode rather than extending the exhausted lineage. Before any new work reconcile each window: execution-to-TRACK by inspecting side effects before recording, TRACK-to-gate by appending a missing checkpoint without redispatch, and gate-to-PLAN by comparing plan versions and gates before creating a continuation. Never repeat a recorded task ID or a completed side effect.
+A lineage permits one root attempt and at most two continuation attempts per episode, for a maximum of three attempts. T1 is the root, T2 and T3 are continuations, and T4 is forbidden in the same episode. Its checkpoints expose `root_attempts: 1`, `continuation_attempts: 0–2`, `continuation_limit: 2`, `total_lineage_attempts: 1–3`, and `total_lineage_limit: 3`. A blocked or failed lineage records and reuses `Blocker: BLK-<slug>-<root-task-id>`. An exhausted episode may reopen only after ordinary inspection verifies, or the user explicitly attests, resolution of that same blocker. Append the evidence and a `replan reopened (plan version N)` checkpoint, preserve prior history, and start a new `Reopens:` episode rather than extending the exhausted lineage. Before any new work reconcile each window: execution-to-TRACK by inspecting side effects before recording, TRACK-to-gate by appending a missing checkpoint without redispatch, and gate-to-PLAN by comparing plan versions and gates before creating a continuation. Never repeat a recorded task ID or a completed side effect.
