@@ -9,7 +9,7 @@ The boundary is absolute: **replanning may change how the goal is reached; it ne
 One work item lives in `spec-interview/<slug>/`:
 
 ```text
-SPEC.md       the contract when present; read-only to planning
+SPEC.md       the contract; mandatory and read-only to planning
 PLAN.md       the actionable future strategy; written or maintained here
 TRACK.md      append-only execution history; input only during a replan
 REPORT.md     terminal communication; owned by reporting
@@ -17,17 +17,13 @@ REPORT.md     terminal communication; owned by reporting
 
 Planning is self-contained. Use only the contract, current PLAN, TRACK, and observable current state available to the run. Do not depend on repository source snapshots, external documentation, scripts, provider-specific APIs, or another runtime skill.
 
-## When there is no SPEC
+## The SPEC is required
 
-A stated goal is enough only when it supports checkable outcomes. Derive a short kebab-case slug from it, write the goal verbatim in the plan header, and state once that the plan and TRACK form the contract:
+Planning operates on a Ready SPEC and nothing else. `spec-interview/<slug>/state.md` must record per-domain coverage and `Verdict: Ready`, which only Specify writes.
 
-```markdown
-Spec: none — the contract is this plan plus TRACK
-```
+If no Ready SPEC exists, do not plan. Preserve every artifact already present, return control to the composite root for Specify, and let it route back here once readiness is recorded. A stated goal, a supplied PRD, a detailed handoff, or an existing PLAN is interview input, never a contract. Never invent a SPEC and never convert an existing PLAN into one.
 
-Omit `Covers:` from every task. Without a SPEC, the contract is the union of `Done when` conditions already satisfied in TRACK and those still in PLAN. That makes the contract extendable by replanning, so make that limitation explicit to the user once.
-
-Never invent a SPEC. If a product goal is too vague for checkable outcomes, return control to the composite root for specification first. For other work, ask only the questions needed to name at least one checkable outcome.
+Every plan therefore names its contract as `Spec: ./SPEC.md`, and every task carries `Covers:`.
 
 ## 1. Ground the plan in observation, never assumption
 
@@ -40,7 +36,7 @@ If observation contradicts the contract, stop and escalate the contradiction. Do
 ```markdown
 # PLAN: <slug>
 
-Spec: ./SPEC.md  # or: none — the contract is this plan plus TRACK
+Spec: ./SPEC.md
 Goal: <one sentence>
 Plan version: 1
 Status: no-op
@@ -103,7 +99,7 @@ Write the current future-only strategy to `spec-interview/<slug>/PLAN.md`:
 ```markdown
 # PLAN: <slug>
 
-Spec: ./SPEC.md  # or: none — the contract is this plan plus TRACK
+Spec: ./SPEC.md
 Goal: <one sentence, restated from the contract or the user's words verbatim>
 Plan version: 1
 Replanned because: <concrete verified trigger>  # omit on version 1 and maintenance
@@ -113,7 +109,7 @@ Reasoning: <why this is one outcome; T1 includes the concrete observation ground
 Task: <what must become true, with concrete parameters>
 Done when: <observable postcondition>
 Verify by: <evidence-producing check>
-Covers: FR-001, AC-003  # omit when there is no SPEC
+Covers: FR-001, AC-003
 Depends on: —
 
 ## T2 — <outcome-shaped title>
@@ -128,8 +124,7 @@ Depends on: T1
 Field rules:
 
 - IDs are stable and never reused. A surviving task retains its ID across plan versions; a new task takes the next unused number from PLAN and TRACK. IDs attached to completed or attempted work are historical and cannot be recycled.
-- With a SPEC, `Covers:` maps to requirement and acceptance-criterion IDs. Every Must-priority requirement and every acceptance criterion must be covered by TRACK `done`/`no_op` entries plus remaining PLAN tasks.
-- `Restates:` is only for no-SPEC replans. It copies a prior pending `Done when` verbatim when the new task restates it more precisely.
+- `Covers:` is mandatory on every task and maps to requirement and acceptance-criterion IDs that exist in the SPEC. Every Must-priority requirement and every acceptance criterion must be covered by TRACK `done`/`no_op` entries plus remaining PLAN tasks.
 - `Continues:` appears only on a replan task that plans the remainder of one `partial`, `blocked`, or `failed` task. It names that attempted ID. On a confirmed reopening after `replan exhausted`, the first replacement instead uses `Reopens:` to name the prior attempt and omits `Continues:`; this preserves history while starting a new attempt episode.
 - `Depends on:` lists prerequisite task IDs; use `—` when none. Place every prerequisite before its dependent and keep the dependency graph acyclic.
 - `Plan version` labels the strategy used for TRACK entries. PLAN is not an archive: it contains only actionable future work. TRACK preserves completed and attempted history.
@@ -138,7 +133,7 @@ Field rules:
 
 Use initial planning when a contract or checkable goal exists and no actionable PLAN exists.
 
-1. Read the SPEC completely, or capture the stated goal verbatim.
+1. Read the SPEC completely.
 2. Observe current state and stop for a contradiction or write the zero-task no-op plan if it is already true.
 3. Decompose only the remaining work into outcome-sized, checkable tasks.
 4. Map all Must requirements and acceptance criteria to TRACK history plus future tasks.
@@ -156,7 +151,7 @@ This deterministic maintenance is required even when no future work changes: com
 
 Enter replan mode only from the execution checkpoint when verified feedback makes future strategy false or incomplete, or when a `replan exhausted` run is reopened after the executor verifies or obtains user attestation that its blocker is resolved. Merely reaching the end of a successful task is not a replan trigger.
 
-Inputs are the immutable SPEC when present, current PLAN, append-only TRACK, and current observed state.
+Inputs are the immutable SPEC, the current PLAN, the append-only TRACK, and current observed state.
 
 ### Reflect first
 
@@ -185,18 +180,16 @@ If observation shows no material strategy change, leave strategy untouched and a
 
 Do not weaken, drop, reinterpret, or silently bypass a SPEC acceptance criterion or Must requirement. If the only path requires a contract change, stop and tell the user which criterion is unreachable, what verified state makes it unreachable, and the options: change the contract, choose a different approach, or accept partial completion. The user alone can amend success.
 
-Without a SPEC, the contract is the union of already-satisfied TRACK `Done when` conditions and the remaining PLAN conditions. A replan may add conditions and may restate a pending condition more precisely with `Restates:`. It may not weaken or drop a pending condition, and it may never alter a condition TRACK already records as satisfied. Escalate instead.
-
 ## Plan quality gate
 
 Run this before writing an initial plan, a materially replanned plan, or checkpoint-maintained PLAN. Fix every missing item; do not ship a caveat.
 
 ```markdown
 - Grounded in an actual observation of current state: Pass / Missing
-- Every acceptance criterion covered by TRACK done/no_op or a remaining task: Pass / Missing / N/A
-- Every Must-priority requirement covered by TRACK done/no_op or a remaining task: Pass / Missing / N/A
-- Every task lists Covers, or a task that transitively depends on it does; no task sits outside every requirement path (SPEC runs): Pass / Missing / N/A
-- Every ID in Covers exists in the SPEC: Pass / Missing / N/A
+- Every acceptance criterion covered by TRACK done/no_op or a remaining task: Pass / Missing
+- Every Must-priority requirement covered by TRACK done/no_op or a remaining task: Pass / Missing
+- Every task lists Covers, or a task that transitively depends on it does; no task sits outside every requirement path: Pass / Missing
+- Every ID in Covers exists in the SPEC: Pass / Missing
 - Every task has one observable Done when: Pass / Missing
 - Every task has a concrete Verify by: Pass / Missing
 - No task describes HOW instead of WHAT: Pass / Missing
@@ -204,7 +197,7 @@ Run this before writing an initial plan, a materially replanned plan, or checkpo
 - PLAN contains only future work; completed tasks exist only in TRACK: Pass / Missing
 - No attempted TRACK task is reissued or retained; each remainder uses a new ID with Continues, or Reopens on a confirmed reopening: Pass / Missing / N/A
 - Surviving IDs remain stable and dependencies are repointed away from attempted tasks: Pass / Missing / N/A
-- Success criteria are unchanged from the SPEC or no-SPEC contract union (replan only): Pass / Missing / N/A
+- Success criteria are unchanged from the SPEC (replan only): Pass / Missing / N/A
 - No strategy version changed for unchanged feedback; only completed work was removed (maintenance only): Pass / Missing / N/A
 
 Verdict: Ready / Not ready

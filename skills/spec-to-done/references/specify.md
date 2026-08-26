@@ -14,7 +14,7 @@ Every substantial new run uses this stage. The sole bypass is procedural, not qu
 
 Derive a short kebab-case slug and use `spec-interview/<slug>/`. If its `state.md` or prior round files exist, read them first, preserve answered material, and ask only the remaining or newly unlocked questions. If an existing folder belongs to a different goal, choose a distinct slug or ask the user before touching it.
 
-A supplied `SPEC`, `PRD`, plan, or prior context is interview input, not a contract. Extract everything it already answers, record each extracted answer beside the passage it came from in `state.md`, and ask only the missing or ambiguous questions: a thorough document earns a short interview, never no interview. Do not persist it as `SPEC.md`, and do not plan or implement on its strength. However complete it looks, it cannot bypass this stage, because the bypass is satisfied by this stage's recorded coverage, not by a document.
+A supplied `SPEC`, `PRD`, plan, or prior context is interview input, not a contract. So is a `PLAN.md`, a `TRACK.md`, or an existing implementation produced before the SPEC became mandatory: preserve all of it, read it as evidence of what was already attempted and what is already true, and never convert it into a SPEC. Once a Ready SPEC exists, planning starts from it and from observed state; attempted task IDs are not reused and recorded side effects are not repeated. Extract everything it already answers, record each extracted answer beside the passage it came from in `state.md`, and ask only the missing or ambiguous questions: a thorough document earns a short interview, never no interview. Do not persist it as `SPEC.md`, and do not plan or implement on its strength. However complete it looks, it cannot bypass this stage, because the bypass is satisfied by this stage's recorded coverage, not by a document.
 
 Otherwise, restate the raw idea in one or two sentences, create the working directory, detect whether the project produces code, and begin round 1.
 
@@ -155,6 +155,7 @@ Before writing or accepting `SPEC.md`, explicitly record this check in `state.md
 - Edge cases and failure modes are covered: Pass / Missing
 - Acceptance criteria are observable: Pass / Missing
 - Every Must-priority functional requirement has at least one acceptance criterion: Pass / Missing
+- Every mandatory business rule, hard constraint, and must-not-happen condition is validated by at least one acceptance criterion: Pass / Missing
 - Test strategy is defined (code projects only): Pass / Missing / N/A
 - Open questions are non-blocking or intentionally deferred: Pass / Missing
 
@@ -167,7 +168,9 @@ If any item is `Missing`, the verdict is `Not ready`: run another round instead 
 
 ## 5. Write the final SPEC only when ready
 
-When the readiness gate passes, save `spec-interview/<slug>/SPEC.md` with this Product SPEC contract:
+When the readiness gate passes, save `spec-interview/<slug>/SPEC.md` with this Product SPEC contract.
+
+This document is the sole contract for everything downstream. **Every Must-priority functional requirement and every acceptance criterion in it is a mandatory completion gate:** planning must cover each one, execution must produce evidence for each one, and reporting may not classify a run `COMPLETED` while any of them is unsatisfied. Replanning may change how a gate is reached and may never change, weaken, or drop the gate itself. There is no second gate system; these two lists are it.
 
 ```markdown
 # SPEC: [Name]
@@ -251,9 +254,10 @@ Only include assumptions explicitly confirmed by the user.
 - ...
 
 ## 14. Acceptance criteria
-Make each criterion TDD-ready by referencing the functional requirement(s) it validates. Use Given/When/Then where helpful:
+Make each criterion TDD-ready by referencing the functional requirement(s), business rule(s), or constraint(s) it validates. Use Given/When/Then where helpful. A mandatory rule with no criterion pointing at it is an obligation nothing verifies, so the readiness gate rejects it:
 
 - AC-001 (FR-001): Given ..., when ..., then ...
+- AC-002 (BR-001): Given ..., when ..., then ...
 
 ## 15. Test strategy
 *(Include only for code projects; omit for non-code deliverables.)*

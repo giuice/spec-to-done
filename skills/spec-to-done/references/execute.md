@@ -14,11 +14,13 @@ This skill is domain-neutral: it executes code work, research, writing, operatio
 
 ```
 spec-interview/<slug>/
-  SPEC.md      the contract      (read-only here; may be absent — then PLAN.md is the contract)
+  SPEC.md      the contract      (mandatory; read-only here)
   PLAN.md      the strategy      (read; replaced by references/plan.md)
   TRACK.md    the record        (you are the only writer)
   REPORT.md    written by references/report.md
 ```
+
+`SPEC.md` is mandatory. If it is absent, malformed, or its readiness is not recorded in `state.md` as `Verdict: Ready`, execution does not begin: do not dispatch a task, do not verify one, and do not replan. Preserve every existing artifact untouched and return control to the composite root for Specify. A PLAN or a TRACK is evidence of what was attempted, never a substitute contract.
 
 ## Execution modes
 
@@ -203,10 +205,8 @@ TRACK rules:
 - **Semantic content is mandatory; canonical decoration is not.** Every task record contains task identity, status, plan version, coverage, state delta, evidence, verification, and every applicable discovery, unresolved item, risk, user action, or deviation. Associate each task with exactly one Gate either in that task record or in a subsequent checkpoint that names the task. `### Gate checkpoint — <task ID>` is recommended style, not a semantic Must.
 
 - **Append every task entry and every gate checkpoint.** `TRACK.md` is append-only: never edit a prior task or checkpoint. After each task entry append `### Gate checkpoint — <task ID>` with plan version, evidence, and one Gate: `plan holds`, `replan required`, `replan done (plan version N)`, or `replan exhausted`. A later fact is a correction checkpoint naming the affected task; history is never rewritten.
-- **On a run with no `Covers`** — no SPEC, so the contract is the union of the plan's `Done when` — copy the task's `Done when` into the entry instead, along with its `Restates:` line when present. Completed tasks leave the plan, so this is the only place the satisfied part of the contract survives.
-
 - **Write it after every task, never reconstruct it at the end.** A track rebuilt from memory at the end of a long run is exactly the semantic loss this workflow exists to prevent.
-- **Copy `Covers` verbatim from the plan.** It is the only path from task evidence back to acceptance criteria once the task leaves the plan. Omit when the plan has no `Covers`.
+- **Copy `Covers` verbatim from the plan.** It is the only path from task evidence back to acceptance criteria once the task leaves the plan. Every task has one; a task without it is a plan defect, not a run to continue.
 - **Every `Discovered` item carries its provenance label** — `[verified]` when you confirmed it against observable state, `[reported, unconfirmed]` when it is only the performer's claim. Briefs, replans, and the gate treat the two differently, so an unlabeled discovery is a format error.
 - **State over activity.** "Authentication now rejects expired tokens" — not "edited AuthService". Filenames are optional traceability, appended after the consequence.
 - **Evidence, not reasoning.** Record what was checked and what it returned. Do not record deliberation.
