@@ -200,13 +200,24 @@ Risk:
 Deviation: TTL set to 60s rather than the planned 300s, because the reporting job
 tolerates at most one minute of staleness.
 Gate: replan required
+
+### Replan checkpoint — T2
+Previous plan version: 1
+New plan version: 2
+Gate: replan done
 ```
 
 TRACK rules:
 
-- **Semantic content is mandatory; canonical decoration is not.** Every task record contains task identity, status, plan version, coverage, state delta, evidence, verification, and every applicable discovery, unresolved item, risk, user action, or deviation. Associate each task with exactly one Gate either in that task record or in a subsequent checkpoint that names the task. `### Gate checkpoint — <task ID>` is recommended style, not a semantic Must.
+- **Semantic content is mandatory; canonical decoration is not.** Every task record contains task identity, status, plan version, coverage, lineage, state delta, evidence, verification, and every applicable discovery, unresolved item, risk, user action, or deviation. Equivalent headings and wording are valid wherever the durable meaning is complete.
 
-- **Append every task entry and every gate checkpoint.** `TRACK.md` is append-only: never edit a prior task or checkpoint. After each task entry append `### Gate checkpoint — <task ID>` with plan version, evidence, and one Gate: `plan holds`, `replan required`, `replan done (plan version N)`, or `replan exhausted`. A later fact is a correction checkpoint naming the affected task; history is never rewritten.
+- **The initial gate is inline: every task record ends with its own `Gate:` line,** holding `plan holds` or `replan required`. Writing it inside the record is what makes the association positional, so it can never be read as belonging to another task.
+
+- **Every later gate transition is a separate checkpoint that names the task,** carrying the plan version and the new value — `replan done (plan version N)` or `replan exhausted`. The current gate for a task is the last gate event associated with it.
+
+- **A gate that names no task is a format error.** One gate covering several tasks at once, or a trailing global gate at the end of the file, destroys the task-to-gate association the report is built from. It is not untidy style; it is unusable evidence.
+
+- **Append every task entry and every gate checkpoint.** `TRACK.md` is append-only: never edit a prior task or checkpoint, including to revise a gate. A gate changes by appending a new checkpoint, never by rewriting the old value. A later fact is a correction checkpoint naming the affected task; history is never rewritten.
 - **Write it after every task, never reconstruct it at the end.** A track rebuilt from memory at the end of a long run is exactly the semantic loss this workflow exists to prevent.
 - **Copy `Root`, and any `Continues` or `Reopens`, verbatim from the plan.** They are the lineage record; without them TRACK cannot show which attempt followed which, and the blocker loses its stable identity.
 - **Copy `Covers` verbatim from the plan.** It is the only path from task evidence back to acceptance criteria once the task leaves the plan. Every task has one; a task without it is a plan defect, not a run to continue.
