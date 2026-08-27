@@ -110,6 +110,7 @@ Task: <what must become true, with concrete parameters>
 Done when: <observable postcondition>
 Verify by: <evidence-producing check>
 Covers: FR-001, AC-003
+Root: T1
 Depends on: —
 
 ## T2 — <outcome-shaped title>
@@ -118,6 +119,7 @@ Task: <what must become true>
 Done when: <observable postcondition>
 Verify by: <evidence-producing check>
 Covers: FR-002
+Root: T2
 Depends on: T1
 ```
 
@@ -125,7 +127,18 @@ Field rules:
 
 - IDs are stable and never reused. A surviving task retains its ID across plan versions; a new task takes the next unused number from PLAN and TRACK. IDs attached to completed or attempted work are historical and cannot be recycled.
 - `Covers:` is mandatory on every task and maps to requirement and acceptance-criterion IDs that exist in the SPEC. Every Must-priority requirement and every acceptance criterion must be covered by TRACK `done`/`no_op` entries plus remaining PLAN tasks.
-- `Continues:` appears only on a replan task that plans the remainder of one `partial`, `blocked`, or `failed` task. It names that attempted ID. On a confirmed reopening after `replan exhausted`, the first replacement instead uses `Reopens:` to name the prior attempt and omits `Continues:`; this preserves history while starting a new attempt episode.
+- `Root:` is mandatory on every task and names the origin of its lineage. A task that starts one names itself; a continuation or a reopening carries the root's ID unchanged, however long the lineage grows. It is unconditional so that `TRACK.md` stays append-only: a root entry is written before anyone knows a continuation will exist, and it can never be edited afterwards to add the field.
+- `Continues:` appears only on a replan task that plans the remainder of one `partial`, `blocked`, or `failed` task, and names that **immediate** attempted predecessor, not the root.
+- `Reopens:` replaces `Continues:` on the first replacement after a confirmed reopening from `replan exhausted`. It names the last exhausted attempt and keeps the same `Root:`, which preserves history while starting a new attempt episode.
+- The stable blocker identity is derived from `Root:`, never from the immediate predecessor, so one lineage keeps one blocker across every attempt.
+
+```markdown
+## T1        Root: T1                      the lineage starts
+## T2        Continues: T1    Root: T1     T1 came back partial
+## T3        Continues: T2    Root: T1     T2 came back partial
+## T4        Reopens: T3      Root: T1     the episode was exhausted and reopened
+```
+
 - `Depends on:` lists prerequisite task IDs; use `—` when none. Place every prerequisite before its dependent and keep the dependency graph acyclic.
 - `Plan version` labels the strategy used for TRACK entries. PLAN is not an archive: it contains only actionable future work. TRACK preserves completed and attempted history.
 
@@ -195,7 +208,8 @@ Run this before writing an initial plan, a materially replanned plan, or checkpo
 - No task describes HOW instead of WHAT: Pass / Missing
 - Dependencies are ordered correctly and acyclic: Pass / Missing
 - PLAN contains only future work; completed tasks exist only in TRACK: Pass / Missing
-- No attempted TRACK task is reissued or retained; each remainder uses a new ID with Continues, or Reopens on a confirmed reopening: Pass / Missing / N/A
+- No attempted TRACK task is reissued or retained; each remainder uses a new ID with Continues naming its immediate predecessor, or Reopens on a confirmed reopening: Pass / Missing / N/A
+- Every task carries Root, and Root is unchanged across every task in one lineage: Pass / Missing
 - Surviving IDs remain stable and dependencies are repointed away from attempted tasks: Pass / Missing / N/A
 - Success criteria are unchanged from the SPEC (replan only): Pass / Missing / N/A
 - No strategy version changed for unchanged feedback; only completed work was removed (maintenance only): Pass / Missing / N/A
