@@ -20,7 +20,7 @@ Always produce exactly one of `COMPLETED`, `PARTIAL`, `BLOCKED`, `FAILED`, or `N
 
 Read `spec-interview/<slug>/`:
 
-- **Contract:** `SPEC.md` when present. Otherwise read the `Goal` in `PLAN.md` plus the union of the `Done when` conditions in the current plan and the conditions copied into `TRACK.md`. Completed work can leave PLAN during replanning, so TRACK preserves the satisfied part of a no-SPEC contract. A `Restates:` value continues a matching earlier `Done when` condition.
+- **Contract:** `SPEC.md`, always. Every Must-priority requirement and every acceptance criterion in it is a mandatory completion gate. `PLAN.md` and `TRACK.md` record how the contract was pursued; neither is ever the contract.
 - **TRACK.md:** the append-only history of task status, coverage, state delta, evidence, verification, unresolved work, risk, user action, deviation, assumptions, and checkpoints.
 - **PLAN.md:** the goal statement, remaining tasks, no-op declaration, and criteria with no TRACK entry.
 
@@ -46,7 +46,7 @@ Never upgrade `PARTIAL`, `BLOCKED`, `FAILED`, unresolved, or unverified work to 
 
 Build a private coverage table before compressing. It is scaffolding, not necessarily report output.
 
-With a SPEC, join every TRACK `Covers:` ID to its required FR and AC. With no SPEC, join copied `Done when:` text and matching `Restates:` semantics across TRACK and PLAN. Judge each criterion across all entries, rather than trusting a task's final adjective.
+Join every TRACK `Covers:` ID to its required FR and AC in the SPEC, then to the evidence and the final satisfaction state. Judge each criterion across all entries, rather than trusting a task's final adjective.
 
 ```text
 AC-001  satisfied     verified    integration test passed

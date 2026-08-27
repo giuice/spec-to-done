@@ -82,7 +82,7 @@ Ela continua até o resultado estar verificado ou até esbarrar em algo que real
 
 ### Opcional: uma etapa isolada
 
-Se você pedir explicitamente apenas uma etapa, esse pedido é respeitado e o restante do workflow não é iniciado.
+Se você pedir explicitamente apenas uma etapa, esse pedido define onde o workflow para. Ele não pula as etapas anteriores: pedir um plano quando nenhum SPEC está pronto executa a entrevista primeiro, depois o plano, e então para.
 
 ## O que ela faz
 
