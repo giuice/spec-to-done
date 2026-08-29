@@ -76,6 +76,8 @@ Use spec-to-done para continuar o trabalho de triagem automática do suporte.
 
 A Skill lê os artefatos persistidos, descobre qual etapa está realmente em aberto e retoma a partir da evidência — não de uma reconstrução do histórico do chat.
 
+Em uma retomada longa elegível no modo **Delegated**, a Skill pode construir uma visão de trabalho opcional em `CURRENT.md` a partir do SPEC, do PLAN e do TRACK completo canônicos. Um verifier separado a compara com esses artefatos e só a aceita quando ela preserva o estado operacional protegido e seu tamanho exato normalizado em bytes não ultrapassa um terço do TRACK. O modo Inline nunca a utiliza. Se a verificação isolada ou a medição exata não estiver disponível, o candidate for rejeitado, o arquivo for apagado ou restar qualquer dúvida, a Skill simplesmente retoma pelo TRACK completo. Replanejamento e relatório sempre usam o TRACK completo.
+
 ### 5. Quando ela para, ela diz por quê
 
 Ela continua até o resultado estar verificado ou até esbarrar em algo que realmente exige um humano: credenciais, autorização, uma ação destrutiva ou irreversível, uma decisão real de produto, ou uma ambiguidade que ela não deve resolver sozinha. Todo encerramento — sucesso, parcial, bloqueado ou falho — passa pelo reporter, então a execução nunca para em silêncio.
@@ -97,15 +99,17 @@ Se você pedir explicitamente apenas uma etapa, esse pedido define onde o workfl
 O workflow guarda seu estado em `spec-interview/<slug-do-trabalho>/`:
 
 ```text
-state.md       status de ciclo de vida, respostas da entrevista, cobertura e gate de prontidão
-round-N.html   uma rodada de entrevista gerada (só quando a UI do host não comporta)
-SPEC.md        contrato do resultado
-PLAN.md        trabalho futuro
-TRACK.md       evidência append-only da execução e estado de retomada
-REPORT.md      resultado final apresentado ao desenvolvedor
+state.md             status de ciclo de vida, respostas da entrevista, cobertura e gate de prontidão
+round-N.html         uma rodada de entrevista gerada (só quando a UI do host não comporta)
+SPEC.md              contrato do resultado
+PLAN.md              trabalho futuro
+TRACK.md             evidência append-only da execução e estado de retomada
+CURRENT.candidate.md projeção temporária e não confiável, quando tentada
+CURRENT.md           projeção opcional verificada ou estado de controle de retry
+REPORT.md            resultado final apresentado ao desenvolvedor
 ```
 
-Como o estado vive nesses artefatos, e não apenas na conversa, o trabalho sobrevive a interrupções, limites de contexto e novas sessões sem reconstruir o progresso pela memória.
+Como o estado vive nesses artefatos, e não apenas na conversa, o trabalho sobrevive a interrupções, limites de contexto e novas sessões sem reconstruir o progresso pela memória. `CURRENT.md` e seu candidate são derivados, nunca evidência nem autoridade: ambos podem ser substituídos ou apagados sem perder o caminho canônico de retomada.
 
 ### Um trabalho ativo por vez
 
@@ -149,10 +153,10 @@ A Skill é autocontida em [`skills/spec-to-done`](skills/spec-to-done):
 spec-to-done/
 ├── SKILL.md
 ├── assets/interview-round.template.html
-└── references/{specify,plan,execute,report}.md
+└── references/{specify,plan,execute,context,report}.md
 ```
 
-Ela não possui dependência de Python em runtime nem configuração específica de provedor.
+Ela não possui dependência instalada de runtime ou script nem configuração específica de provedor. Hosts sem subagents mantêm o workflow Inline completo; eles apenas deixam de usar a projeção opcional.
 
 ## Feedback
 

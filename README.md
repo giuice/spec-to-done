@@ -76,6 +76,8 @@ Use spec-to-done to continue the support-inbox auto-triage work.
 
 The Skill reads the persisted artifacts, works out which stage is actually current, and picks up from evidence — not from a reconstruction of the chat history.
 
+On an eligible long resume in **Delegated** mode, the Skill may build an optional `CURRENT.md` working view from the canonical SPEC, PLAN, and full TRACK. A separate verifier compares it with those artifacts and accepts it only when it preserves protected operational state and its exact normalized byte size is at most one third of TRACK. Inline mode never uses it. If isolated verification or exact measurement is unavailable, the candidate is rejected, the file is deleted, or any doubt remains, the Skill simply resumes from full TRACK. Replanning and reporting always use full TRACK.
+
 ### 5. When it stops, it tells you why
 
 It keeps going until the outcome is verified or it hits something that genuinely requires a human: credentials, authority, a destructive or irreversible action, a real product decision, or an ambiguity it must not resolve alone. Every ending — success, partial, blocked, or failed — goes through the reporter, so the run never stops silently.
@@ -97,15 +99,17 @@ If you explicitly ask for one stage only, that request sets where the workflow s
 The workflow stores its state under `spec-interview/<work-slug>/`:
 
 ```text
-state.md       lifecycle status, interview answers, coverage, and the readiness gate
-round-N.html   a generated interview round (only when the host UI cannot carry it)
-SPEC.md        the outcome contract
-PLAN.md        future work
-TRACK.md       append-only execution evidence and resume state
-REPORT.md      the final developer-facing result
+state.md             lifecycle status, interview answers, coverage, and the readiness gate
+round-N.html         a generated interview round (only when the host UI cannot carry it)
+SPEC.md              the outcome contract
+PLAN.md              future work
+TRACK.md             append-only execution evidence and resume state
+CURRENT.candidate.md temporary untrusted resume projection, when attempted
+CURRENT.md           optional verified resume projection or retry-control state
+REPORT.md            the final developer-facing result
 ```
 
-Because the state lives in these artifacts instead of only in the conversation, the work can survive interruptions, context limits, and a new session without reconstructing progress from memory.
+Because the state lives in these artifacts instead of only in the conversation, the work can survive interruptions, context limits, and a new session without reconstructing progress from memory. `CURRENT.md` and its candidate are derived, never evidence or authority: either can be replaced or deleted without losing the canonical resume path.
 
 ### One active work at a time
 
@@ -149,10 +153,10 @@ The Skill is self-contained in [`skills/spec-to-done`](skills/spec-to-done):
 spec-to-done/
 ├── SKILL.md
 ├── assets/interview-round.template.html
-└── references/{specify,plan,execute,report}.md
+└── references/{specify,plan,execute,context,report}.md
 ```
 
-It has no Python runtime dependency and no provider-specific configuration.
+It has no installed runtime or script dependency and no provider-specific configuration. Hosts without subagents retain the complete Inline workflow; they only skip the optional projection.
 
 ## Feedback
 

@@ -14,10 +14,12 @@ This skill is domain-neutral: it executes code work, research, writing, operatio
 
 ```
 spec-interview/<slug>/
-  SPEC.md      the contract      (mandatory; read-only here)
-  PLAN.md      the strategy      (read; replaced by references/plan.md)
-  TRACK.md    the record        (you are the only writer)
-  REPORT.md    written by references/report.md
+  SPEC.md               the contract      (mandatory; read-only here)
+  PLAN.md               the strategy      (read; replaced by references/plan.md)
+  TRACK.md              the record        (you are the only writer)
+  REPORT.md             written by references/report.md
+  CURRENT.md            optional derived resume view; never evidence
+  CURRENT.candidate.md  temporary untrusted builder output
 ```
 
 `SPEC.md` is mandatory. If it is absent, malformed, or its readiness is not recorded in `state.md` as `Verdict: Ready`, execution does not begin: do not dispatch a task, do not verify one, and do not replan. Preserve every existing artifact untouched and return control to the composite root for Specify. A PLAN or a TRACK is evidence of what was attempted, never a substitute contract.
@@ -31,6 +33,12 @@ Pick per task, in this order:
 **Inline.** When the host provides no subagents, when the user asks for it, or when the whole plan is two trivial tasks. Everything else in this skill is unchanged — including verifying the postcondition as a separate act from doing the work.
 
 **Human handoff.** When the task must be performed by a person or outside your reach — a physical action, an approval, an access grant. Present the task, its `Done when`, and what evidence you need in plain language; never hand a person the structured return contract below. Ask only: did it happen, what is now true, and anything unexpected. **You** turn that answer into the track entry, recording it as `attested`. Never mark such a task done on the assumption it happened.
+
+## Optional fresh-resume working view
+
+After selecting Delegated mode for a fresh resume, and before loading full historical TRACK for ordinary dispatch, read `references/context.md` completely and apply its one-cycle builder/verifier protocol. Read that reference only on this conditional path. Inline mode never creates or uses CURRENT and continues through full TRACK.
+
+A just-verified Safe CURRENT changes only the historical TRACK text held in the root working context. TRACK remains the sole execution record: every task is still independently verified and appended there, and the existing gate still runs after every outcome. Any unavailable, missing, rejected, ambiguous, ineligible, repair, replan, reopening, or reporting path uses full TRACK. `references/plan.md` in replan mode and `references/report.md` always receive full TRACK.
 
 ---
 
@@ -295,6 +303,8 @@ Report the state through `references/report.md` rather than improvising a new ob
 ---
 
 ## Resuming
+
+The optional working view in `references/context.md` is subordinate to the canonical reconciliation below. It may be accepted only when isolated canonical inspection proves that no interruption window, repair, immediate replan, exhausted blocker, reopening, or terminal route is pending; otherwise read full TRACK before any dispatch.
 
 `TRACK.md` is the resume point. On restart, read the contract, `PLAN.md`, and `TRACK.md`. First reconcile each interruption window without changing any existing entry: execution-to-TRACK uses the step 2 pre-dispatch state check before recording; TRACK-to-gate appends a missing checkpoint for the recorded task; gate-to-PLAN compares the last checkpoint's plan version and gate before any continuation is created. If `replan required` has a higher `PLAN.md` version, append `replan done (plan version N)`; at the same version invoke the replanner. Never dispatch a recorded task ID.
 
