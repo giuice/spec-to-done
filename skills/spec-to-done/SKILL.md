@@ -40,9 +40,11 @@ A detailed handoff is not a Ready SPEC. Completion follows through the reporter,
 
 ## Continuation and safety
 
-After every selected reference return here and route again. Execute reads the local plan reference for replanning and the local report reference for every terminal route; both are internal continuation, not cross-skill handoff. TRACK is the sole execution record and its task records, corrections, and gate checkpoints are append-only. Before a destructive or irreversible action, preserve evidence, ask for authority, and report the blocker rather than proceeding.
+After every selected reference return here and route again. Execute reads the local plan reference for replanning and the local report reference for every terminal route; both are internal continuation, not cross-skill handoff. TRACK is the sole execution record and its task records, corrections, and gate checkpoints are append-only. Each record is written compact at the point of writing — identifiers and protected state literal, state and evidence reduced to their material form, narrative and raw logs never written — and nothing already recorded is ever summarized. Before a destructive or irreversible action, preserve evidence, ask for authority, and report the blocker rather than proceeding.
 
 On a terminal route, treat the report body as a single immutable output: persist it after the `REPORT.md` header, then emit that exact body byte-for-byte as the developer response. Do not reconstruct, paraphrase, prefix, suffix, or replace it with routing, execution, or validation narration.
+
+Terminal finalization has one order: execution reconciliation passes; reporting persists `REPORT.md`; the composite root changes `state.md` to `Status: closed`; then the root reads the persisted report body from disk and emits those exact characters without adding blank lines or Markdown formatting. A task record, an effective `replan required`, or future work still present in PLAN cannot enter this sequence.
 
 ## Full protocol
 A lineage permits one root attempt and at most two continuation attempts per episode, for a maximum of three attempts: T1 is the root, T2 and T3 are continuations, and a fourth attempt in the same episode is forbidden. Use a stable `Blocker: BLK-<slug>-<root-task-id>`. Reopen only a matching exhausted blocker after verified or explicitly attested resolution, append evidence and a new episode checkpoint, and preserve history. Reconcile execution→TRACK, TRACK→gate, and gate→PLAN before future work; never repeat a recorded ID or completed side effect.
