@@ -11,11 +11,50 @@ One work item lives in `spec-interview/<slug>/`:
 ```text
 SPEC.md       the contract; mandatory and read-only to planning
 PLAN.md       the actionable future strategy; written or maintained here
-TRACK.md      append-only execution history; input only during a replan
+TRACK.md      append-only execution history; input during maintenance or replan; never written here
 REPORT.md     terminal communication; owned by reporting
 ```
 
 Planning is self-contained. Use only the contract, current PLAN, TRACK, and observable current state available to the run. Do not depend on repository source snapshots, external documentation, scripts, provider-specific APIs, or another runtime skill.
+
+## Operational call contract
+
+For the maintenance or material-replan call made immediately after a newly recorded task, the executor supplies all six inputs together:
+
+```text
+- the complete SPEC;
+- the complete current PLAN;
+- the complete TRACK;
+- current observable state;
+- the triggering task;
+- the executor-decided Gate: plan holds | replan required.
+```
+
+Planning reads the complete inputs, writes the resulting PLAN, validates it as future-only, and returns control to the executor. Planning never writes TRACK, never appends a gate checkpoint, and never executes a task. The executor may reject an invalid planner result and call planning again, but it must not repair PLAN itself.
+
+A reopening call uses the same complete SPEC, PLAN, TRACK, and observable state, plus the exhausted trigger and verified or attested resolution of its stable blocker. It does not create or change an inline Gate. Planning writes the first future-only PLAN of the new episode; Execute validates it and appends the existing named `replan reopened` checkpoint.
+
+The planner returns exactly one of these transient blocks to the executor. These outcomes do not add a gate, canonical state, artifact, or required TRACK field; Execute uses them only to validate PLAN and render the existing checkpoint:
+
+```text
+outcome: PLAN maintenance complete
+trigger_task_id: <T-id>
+plan_version: <N>
+
+outcome: material replan complete
+trigger_task_id: <T-id>
+previous_plan_version: <N>
+new_plan_version: <N+1>
+Root: <root task ID>
+
+outcome: replan exhausted
+trigger_task_id: <T-id>
+plan_version: <N>
+Root: <root task ID>
+Blocker: BLK-<slug>-<root-task-id>
+```
+
+Return only the applicable block. Planning does not return attempt counters; Execute derives them from the complete TRACK lineage and copies the validated identity/version values into one checkpoint.
 
 ## The SPEC is required
 
@@ -126,6 +165,7 @@ Depends on: T1
 Field rules:
 
 - IDs are stable and never reused. A surviving task retains its ID across plan versions; a new task takes the next unused number from PLAN and TRACK. IDs attached to completed or attempted work are historical and cannot be recycled.
+- A surviving ID remains bound to the same future outcome. Materially changing `Task`, `Done when`, `Verify by`, `Covers`, lineage, purpose, or the result the task is intended to produce creates a new task and requires a new ID. Wording may be clarified under the same ID only when that identity is unchanged.
 - `Covers:` is mandatory on every task and maps to requirement and acceptance-criterion IDs that exist in the SPEC. Every Must-priority requirement and every acceptance criterion must be covered by TRACK `done`/`no_op` entries plus remaining PLAN tasks.
 - `Root:` is mandatory on every task and names the origin of its lineage. A task that starts one names itself; a continuation or a reopening carries the root's ID unchanged, however long the lineage grows. It is unconditional so that `TRACK.md` stays append-only: a root entry is written before anyone knows a continuation will exist, and it can never be edited afterwards to add the field.
 - `Continues:` appears only on a replan task that plans the remainder of one `partial`, `blocked`, or `failed` task, and names that **immediate** attempted predecessor, not the root.
@@ -154,17 +194,25 @@ Use initial planning when a contract or checkable goal exists and no actionable 
 
 Planning stops at the written strategy and returns control to the composite root. It never performs planned work.
 
-## Checkpoint maintenance without a strategy replan
+## Checkpoint maintenance after `plan holds`
 
-Every execution checkpoint distinguishes maintenance from replanning. When verified feedback leaves the remaining strategy valid, do not regenerate it or increment `Plan version`. The executor records the completed or no-op task in TRACK; maintenance removes that now-completed task from actionable PLAN, leaves surviving task IDs and dependencies unchanged, and preserves the same plan version. Its coverage remains satisfied through TRACK.
+Use this mode only when the executor supplies `Gate: plan holds`. Verified feedback has not changed the remaining strategy, so maintenance removes history from the future plan without redesigning any outcome.
 
-This deterministic maintenance is required even when no future work changes: completed work must not remain in PLAN, and an unchanged feedback checkpoint is not a pretext for needless strategy churn.
+1. Remove from PLAN every task ID already present in TRACK.
+2. Preserve the current version exactly and keep exactly one `Plan version:` field.
+3. Preserve each surviving task's ID, outcome, `Task`, `Done when`, `Verify by`, `Covers`, lineage, purpose, and relative order.
+4. Preserve every dependency between surviving tasks exactly. For a dependency that names an ID in TRACK, remove it when that task's `done`/`no_op` evidence satisfies the prerequisite; otherwise repoint it only to an unchanged surviving task that already represents the remaining prerequisite without changing either task's outcome identity. If neither is valid, maintenance is invalid: return control without writing PLAN so Execute remains inside reconciliation; do not invent a prerequisite.
+5. Do not add `Replanned because:`, `Continues:`, or `Reopens:`.
+6. Do not create a checkpoint. Planning writes PLAN; the executor owns TRACK and appends checkpoints only when the gate requires one.
+7. Run the PLAN quality gate and return a validated future-only PLAN.
+
+This deterministic maintenance is required even when no future work remains. A completed or no-op task must not remain in PLAN, and unchanged feedback is not a pretext for version churn, new IDs, or changed survivor identity.
 
 ## Replanning only after material divergence
 
 Enter replan mode only from the execution checkpoint when verified feedback makes future strategy false or incomplete, or when a `replan exhausted` run is reopened after the executor verifies or obtains user attestation that its blocker is resolved. Merely reaching the end of a successful task is not a replan trigger.
 
-Inputs are the immutable SPEC, the current PLAN, the append-only TRACK, and current observed state.
+Use the operational call contract above: immutable SPEC, complete current PLAN, complete append-only TRACK, current observable state, triggering task, and the executor-decided `Gate: replan required`.
 
 ### Reflect first
 
@@ -178,14 +226,46 @@ Only TRACK discoveries marked verified may become task premises. An unconfirmed 
 
 ### Then regenerate only invalid future work
 
-1. Identify remaining tasks that still hold and those invalidated by current verified state.
-2. Remove work that is no longer needed; retain valid surviving tasks unchanged, including their IDs.
-3. Add the smallest necessary future outcomes, using concrete discovered facts rather than old placeholders.
-4. Replace every attempted instruction with a new ID for its remainder. An attempted task never survives in PLAN, even if some of its work remains.
-5. Repoint each surviving dependency that named a replaced task to the new task, or drop it only when the already-completed portion satisfies the prerequisite. No dependency may name an attempted (`partial`, `blocked`, or `failed`) TRACK task because it can never become a satisfiable prerequisite.
-6. Increment `Plan version` and set `Replanned because:` to the specific verified trigger. Do not retain prior plan text as history.
+1. Remove every ID already present in TRACK. No attempted or completed ID survives in actionable PLAN.
+   An attempted task never survives in PLAN, even when its remainder still needs a new task.
+2. Identify unattempted tasks that still hold and those invalidated by current verified state.
+3. Preserve every valid survivor unchanged: same ID, outcome identity, task contract, lineage, purpose, and relative order.
+4. Add only the smallest necessary future outcomes, grounded in verified facts rather than old placeholders.
+5. Give every new outcome or remainder the next unused numeric `T<number>` after the highest numeric ID in PLAN or TRACK. Never reuse an attempted ID and never use suffix IDs.
+6. Preserve `Root:` across the lineage. A remainder uses `Continues:` naming its immediate attempted predecessor. Only the first replacement after a valid exhausted-blocker reopening uses `Reopens:` naming the last exhausted attempt.
+7. Repoint every dependency that named attempted work to the new remainder, or remove it only when TRACK evidence shows the exact prerequisite state needed by the dependent is already satisfied. A partial task may satisfy only that narrower prerequisite while its own unresolved clause remains unsatisfied. No dependency may point to any ID in TRACK.
+8. Increment `Plan version` exactly once, keep exactly one `Plan version:` field, and set `Replanned because:` to the specific verified trigger.
+9. Preserve complete coverage of every Must requirement and acceptance criterion through TRACK `done`/`no_op` evidence plus remaining PLAN tasks.
+10. Run the PLAN quality gate before writing the result. Do not retain prior PLAN text as history.
 
-If observation shows no material strategy change, leave strategy untouched and apply only checkpoint maintenance described above.
+If observation shows no material strategy change, do not perform these steps. Apply only checkpoint maintenance and keep the version unchanged.
+
+### Replan exhausted
+
+When no valid continuation remains inside the unchanged SPEC and the triggering Root's episode limits, do not fabricate another remainder or continue that episode. Exhaustion is scoped to that `Root:` and episode; it is not an instruction to discard unrelated future strategy.
+
+Return only the exact `outcome: replan exhausted` block from the operational
+call contract. Do not rename, omit, or supplement its fields.
+
+The resulting PLAN remains future-only and keeps the current version; do not increment a version solely to declare exhaustion. Remove the attempted trigger and every same-Root continuation in that episode. Preserve each valid task under another Root in its existing relative order. If such a task depended on attempted work, remove that dependency only when verified TRACK state satisfies the exact prerequisite it needs; otherwise the task is not independent and must leave actionable PLAN rather than execute across the exhausted lineage. PLAN contains no continuation beyond the attempt limit, attempted ID, dependency to an ID in TRACK, or different outcome reusing the exhausted ID.
+
+`replan exhausted` is terminal for the lineage. It is terminal for the run only when no eligible future task under another Root remains. The executor, not planning, appends the named checkpoint; the composite root decides whether the remaining PLAN routes to Execute or Report.
+
+This return is not a new artifact, gate, canonical state, or TRACK field.
+
+### Reopening after verified blocker resolution
+
+Reopening starts a new attempt episode only after Execute verifies or receives explicit attestation that the stable blocker from the exhausted task is resolved.
+
+1. Read the complete SPEC, current PLAN, complete TRACK, current observable state, exhausted trigger, and matching resolution evidence.
+2. Preserve the exhausted task's `Root:` and stable blocker identity.
+3. Allocate the next unused numeric task ID after the highest ID in PLAN or TRACK.
+4. Use `Reopens:` on the first replacement, naming the exhausted attempt; do not also use `Continues:`.
+5. Write a future-only PLAN with exactly one version field and increment the prior PLAN version exactly once.
+6. Preserve valid unrelated survivors, their identity, relative order, coverage, and dependencies.
+7. Return material replan complete. Execute validates the PLAN and appends the existing named `replan reopened (plan version N)` checkpoint associated with the exhausted trigger and matching blocker.
+
+Reopening does not add a gate, canonical state, artifact, or required TRACK field.
 
 ### Contract invariant
 
@@ -199,20 +279,25 @@ Run this before writing an initial plan, a materially replanned plan, or checkpo
 
 ```markdown
 - Grounded in an actual observation of current state: Pass / Missing
-- Every acceptance criterion covered by TRACK done/no_op or a remaining task: Pass / Missing
-- Every Must-priority requirement covered by TRACK done/no_op or a remaining task: Pass / Missing
+- Every acceptance criterion accounted for by TRACK done/no_op, a remaining task, or an exhausted lineage that preserves it as an unsatisfied terminal residual: Pass / Missing
+- Every Must-priority requirement accounted for by TRACK done/no_op, a remaining task, or an exhausted lineage that preserves it as an unsatisfied terminal residual: Pass / Missing
 - Every task lists Covers, or a task that transitively depends on it does; no task sits outside every requirement path: Pass / Missing
 - Every ID in Covers exists in the SPEC: Pass / Missing
 - Every task has one observable Done when: Pass / Missing
 - Every task has a concrete Verify by: Pass / Missing
 - No task describes HOW instead of WHAT: Pass / Missing
 - Dependencies are ordered correctly and acyclic: Pass / Missing
-- PLAN contains only future work; completed tasks exist only in TRACK: Pass / Missing
-- No attempted TRACK task is reissued or retained; each remainder uses a new ID with Continues naming its immediate predecessor, or Reopens on a confirmed reopening: Pass / Missing / N/A
+- Exactly one Plan version field exists: Pass / Missing
+- No ID already present in TRACK remains in PLAN: Pass / Missing
+- No dependency points to an ID already present in TRACK: Pass / Missing
+- PLAN contains only future work: Pass / Missing
+- Every surviving ID preserves the same outcome identity, task contract, lineage, purpose, and relative order: Pass / Missing / N/A
+- Every new outcome or remainder has the next unused numeric ID after the highest numeric ID in PLAN or TRACK: Pass / Missing / N/A
+- Every remainder uses Continues for its immediate attempted predecessor, or Reopens only on the first replacement after valid reopening; they never coexist on one task: Pass / Missing / N/A
 - Every task carries Root, and Root is unchanged across every task in one lineage: Pass / Missing
-- Surviving IDs remain stable and dependencies are repointed away from attempted tasks: Pass / Missing / N/A
+- No task remains under an exhausted Root or depends on its unsatisfied state without a valid reopening: Pass / Missing
+- Plan version is unchanged for maintenance and incremented exactly once for material replan: Pass / Missing / N/A
 - Success criteria are unchanged from the SPEC (replan only): Pass / Missing / N/A
-- No strategy version changed for unchanged feedback; only completed work was removed (maintenance only): Pass / Missing / N/A
 
 Verdict: Ready / Not ready
 ```
@@ -230,6 +315,8 @@ Coverage is always evaluated against TRACK plus remaining PLAN, never PLAN alone
 **History in PLAN.** Completed tasks belong in TRACK; PLAN must remain an actionable future strategy.
 
 **Reissuing attempted IDs.** Reusing a partial, blocked, or failed ID either repeats side effects or makes the executor skip necessary remainder work.
+
+**Changing a surviving ID's outcome.** Reusing an unattempted ID for a materially different task hides a new result behind old identity. Preserve the original outcome or allocate a new ID.
 
 **Broken dependencies.** Leaving a dependency aimed at an attempted task deadlocks execution; repoint it to the new remainder or remove it only when already-satisfied state permits.
 
