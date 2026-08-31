@@ -6,22 +6,21 @@ Status: seis controles closure-only sem mudança normativa obtiveram **2/6
 válidas**; o patch de append único permanece rejeitado em 1/6; end-to-end e
 compactação não foram executados
 
-## Estado visível no Git
+## Baseline testada
 
 ```text
-Control base / prior HEAD  162293bf1199faca8cde4da4efe108667166f577
-Normative baseline         2571c99d45b19e6d214201391c58b180e7eeda0a
+Normative baseline commit  2571c99d45b19e6d214201391c58b180e7eeda0a
 
 SKILL.md   blob d36a349c9ba0 / SHA-256 5f0440b460ac
 plan.md    blob 9fa6f7580399 / SHA-256 55e779256622
 execute.md blob 23d05a732409 / SHA-256 788cfa214aff
 ```
 
-O commit `162293bf...` altera somente o handoff anterior e tem a baseline
-normativa como pai. Esta rodada também muda somente este handoff; o HEAD final
-será o commit que levar esta evidência ao Git. Nenhuma linha de `SKILL.md`,
-`plan.md` ou `execute.md` mudou. Os workspaces, scores e testes do workbench são
-locais e ignorados pelo Git.
+O handoff não fixa seu próprio HEAD: esse hash só existe depois do commit e deve
+ser lido diretamente do Git. O hash acima identifica somente a baseline
+normativa efetivamente submetida ao modelo. Esta rodada muda apenas este
+handoff; nenhuma linha de `SKILL.md`, `plan.md` ou `execute.md` mudou. Os
+workspaces, scores e testes do workbench são locais e ignorados pelo Git.
 
 ## Controle sem mudança
 
