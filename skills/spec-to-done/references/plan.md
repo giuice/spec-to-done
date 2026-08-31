@@ -70,20 +70,7 @@ Before writing or regenerating tasks, inspect actual current state. Use what the
 
 The reasoning for `T1` must cite a concrete observation: what exists, what is missing, and which contract assumptions it confirms or contradicts. Do not infer a premise merely because a goal mentions it.
 
-If observation contradicts the contract, stop and escalate the contradiction. Do not quietly plan around it. If the goal is already true, produce no work merely to make a plan look substantial. Write this zero-task plan and return control to the composite root for reporting:
-
-```markdown
-# PLAN: <slug>
-
-Spec: ./SPEC.md
-Goal: <one sentence>
-Plan version: 1
-Status: no-op
-Already true because: <the observation that establishes it>
-Evidence: <how it was observed>
-```
-
-`Status: no-op` appears only on a zero-task, already-satisfied plan. A PLAN with tasks omits it.
+If observation contradicts the contract, stop and escalate the contradiction. Do not quietly plan around it. If the goal is already true before execution begins, produce no work merely to make a plan look substantial; use the initial no-op form below. Once TRACK contains any task record, `Status: no-op` is forbidden: historical execution must be reconciled and reported from TRACK rather than reclassified as an initially satisfied goal.
 
 ## 2. Choose outcome-sized tasks
 
@@ -186,6 +173,21 @@ Field rules:
 
 Use initial planning when a contract or checkable goal exists and no actionable PLAN exists.
 
+When observation proves the goal was already true and TRACK contains zero task records, write this zero-task plan and return control to the composite root for reporting:
+
+```markdown
+# PLAN: <slug>
+
+Spec: ./SPEC.md
+Goal: <one sentence>
+Plan version: 1
+Status: no-op
+Already true because: <the observation that establishes it>
+Evidence: <how it was observed>
+```
+
+`Status: no-op` is legal only in this initial, zero-task, zero-TRACK-record case. A PLAN with tasks or any PLAN produced after a TRACK task record omits it. Maintenance, material replan, exhaustion, and reopening must reject it rather than use it as a terminal shortcut.
+
 1. Read the SPEC completely.
 2. Observe current state and stop for a contradiction or write the zero-task no-op plan if it is already true.
 3. Decompose only the remaining work into outcome-sized, checkable tasks.
@@ -222,9 +224,31 @@ Start the first future task’s reasoning with an explicit reflection:
 - how current observable state confirms the relevant result, rather than accepting an executor claim; and
 - what verified discovery made the former future strategy invalid or incomplete.
 
-Only TRACK discoveries marked verified may become task premises. An unconfirmed report needs its own validation task or stays out of future-plan facts.
+Only TRACK discoveries marked verified may become task premises. An unconfirmed report needs its own validation task only when the capability required to perform that validation is observably available now; otherwise it stays out of future-plan facts. Verified unavailability of the exact capability required by a partial task does not justify another validation task: apply the partial branch below.
+
+### Resolve a partial trigger before generic regeneration
+
+For a triggering task recorded `partial`, inspect the exact observation still required by its conjunctive `Done when` and `Verify by`, then choose exactly one branch. A partial may never produce both branches, neither branch, a new `Root:`, or an unrelated replacement outcome.
+
+**Executable remainder.** Use this branch only when every capability, person, environment, access path, and resource required to perform the missing observation is observably available now.
+
+1. Create exactly one direct continuation with the next unused numeric ID.
+2. Copy `Root:` exactly from the partial trigger and set `Continues:` to that trigger's task ID. Do not use `Reopens:`.
+3. Preserve the unresolved outcome and its required observation; do not replace it with a different task or a generic validation placeholder.
+4. Insert the continuation at the attempted predecessor's former relative position: after every surviving task that preceded the trigger and before the first surviving task that followed it. Repoint dependencies to this new ID where the unresolved outcome is still required.
+5. Complete a material replan and increment the PLAN version exactly once.
+
+**Unavailable verification capability.** Use this branch when observable state shows that a capability, person, environment, access path, or resource required for the missing observation is unavailable now and no valid continuation inside the unchanged SPEC and current episode can obtain it.
+
+1. Create no continuation and no validation task for that already-observed unavailability.
+2. Preserve the trigger's `Root:` and Root-derived blocker identity.
+3. Apply `replan exhausted` to that Root and episode, using the unchanged PLAN version and preserving eligible independent Roots.
+
+If availability itself is unconfirmed and can be checked with an available capability, a narrowly scoped validation task may establish that fact. It must not replace or detach the partial remainder. If the required checking capability is itself observably unavailable, exhaust the partial trigger's existing Root instead of creating a task that cannot be verified.
 
 ### Then regenerate only invalid future work
+
+For a partial trigger, these generic steps apply only after the exclusive branch above has selected an executable remainder. Exhaustion skips directly to `Replan exhausted`.
 
 1. Remove every ID already present in TRACK. No attempted or completed ID survives in actionable PLAN.
    An attempted task never survives in PLAN, even when its remainder still needs a new task.
@@ -294,8 +318,10 @@ Run this before writing an initial plan, a materially replanned plan, or checkpo
 - Every surviving ID preserves the same outcome identity, task contract, lineage, purpose, and relative order: Pass / Missing / N/A
 - Every new outcome or remainder has the next unused numeric ID after the highest numeric ID in PLAN or TRACK: Pass / Missing / N/A
 - Every remainder uses Continues for its immediate attempted predecessor, or Reopens only on the first replacement after valid reopening; they never coexist on one task: Pass / Missing / N/A
+- Every partial trigger resolves exclusively to one direct continuation at its predecessor's former relative position or to same-Root exhaustion; capability unavailability never produces an unverifiable validation task: Pass / Missing / N/A
 - Every task carries Root, and Root is unchanged across every task in one lineage: Pass / Missing
 - No task remains under an exhausted Root or depends on its unsatisfied state without a valid reopening: Pass / Missing
+- Status no-op appears only in an initial zero-task PLAN when TRACK has no task records: Pass / Missing / N/A
 - Plan version is unchanged for maintenance and incremented exactly once for material replan: Pass / Missing / N/A
 - Success criteria are unchanged from the SPEC (replan only): Pass / Missing / N/A
 

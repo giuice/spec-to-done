@@ -110,6 +110,7 @@ Do not select, dispatch, report, or return to the composite root while any of th
 - its required named checkpoint is missing or names a different task;
 - an ID already present in TRACK still appears in PLAN;
 - a PLAN dependency points to an ID already present in TRACK;
+- PLAN declares `Status: no-op` after TRACK contains any task record;
 - PLAN does not contain exactly one `Plan version:` field;
 - PLAN and TRACK disagree about version, survivor identity, order, lineage, blocker, or remaining future work;
 - a same-Root continuation or task still dependent on an exhausted lineage was dispatched before matching verified or attested reopening.
@@ -118,7 +119,14 @@ Repair the applicable interruption window first.
 
 Any replacement or new outcome uses the next unused numeric task ID, never a suffix such as `T5R`.
 
-The first task in `PLAN.md` with **no track entry at all**, and whose `Depends on` tasks are all `done` or `no_op`.
+Scan PLAN task blocks from top to bottom on every selection. For each task in written order:
+
+1. If its ID already has any TRACK task record, PLAN is invalid; stop selection and reconcile instead of skipping it.
+2. Evaluate every `Depends on` ID. The task is eligible only when each dependency is satisfied by `done` or `no_op` evidence, or is absent because checkpoint maintenance already removed that satisfied dependency.
+3. Select the first eligible task and stop the scan. Never preselect a later task, choose a more convenient ready task, or reorder PLAN during selection.
+4. If a task is not eligible, continue downward only to find the first later task whose prerequisites are independently satisfied. If none exists, reconcile or take the valid terminal route; do not dispatch a blocked dependent.
+
+If TRACK contains any task record, reject any PLAN that declares `Status: no-op`. That field is legal only for the initial zero-task, already-satisfied plan before execution; it can never summarize, erase, or terminate recorded work.
 
 **Never redispatch a task that already has any track entry.** A `partial`, `blocked`, or `failed` task is unfinished work whose remainder is not yet planned; re-running it repeats side effects. The replanner returns that remainder as a new task with a new ID, so the track and the plan never disagree about what has been attempted.
 
@@ -391,7 +399,7 @@ Invoke `references/plan.md` in replan mode when any of these holds:
 
 Otherwise set `Gate: plan holds`; Plan performs future-only maintenance before Execute reconciles and returns to root.
 
-**Unconfirmed discoveries never redraw the strategy.** If a `[reported, unconfirmed]` fact would invalidate later tasks, confirm it first; if confirming it takes real work, the only replan it may drive is one that adds a validation task. The strategy rewrite waits for that task's verified result.
+**Unconfirmed discoveries never redraw the strategy.** If a `[reported, unconfirmed]` fact would invalidate later tasks, confirm it first. A validation task is valid only when the capability required to perform that validation is observably available now. If a partial task's exact required verification capability is observably unavailable, do not create an unverifiable validation task: the planner must exhaust that same `Root:` and episode. The strategy rewrite waits for verified evidence.
 
 **Mid-task trigger.** Do not wait for the task to end when the divergence is already fatal. If a performer reports `blocked` or `failed` with a reason that invalidates the plan, replan immediately rather than dispatching the next task into a plan you know is wrong.
 
@@ -415,6 +423,7 @@ After every task record is appended:
    - material replan: PLAN version exactly previous version + 1;
    - exhaustion: current PLAN version, triggering task, `Root:`, stable blocker, and no valid continuation for that Root and episode; unrelated eligible survivors may remain.
    In every case, the PLAN quality gate and post-task barrier below must pass.
+   For a `partial` trigger, this is exclusive: require either exactly one new direct continuation at the trigger's former relative PLAN position, with the same `Root:` and `Continues: <trigger task ID>`, or same-Root exhaustion with no continuation. Reject both, neither, a different/new Root, an unrelated replacement outcome, or a validation task whose required capability is unavailable.
 4. Derive `root_attempts`, `continuation_attempts`, and `total_lineage_attempts` from the complete TRACK entries for the triggering Root's current episode. Do not copy counters from Plan, infer them from exhaustion, or use the lineage limits as the observed counts.
 5. If material replan is valid, copy the planner's validated trigger/version/Root values and append exactly:
 
@@ -460,6 +469,7 @@ Before returning to the composite root, confirm:
 - PLAN contains exactly one `Plan version:`;
 - PLAN version agrees with the task's named checkpoint when one is required; maintenance keeps the prior version and has no checkpoint;
 - surviving task identity and relative order are unchanged;
+- every partial trigger has exactly one valid closure: its direct same-Root continuation at the predecessor's former relative position, or same-Root exhaustion with no continuation;
 - dependencies are ordered and acyclic;
 - Root, Continues, Reopens, blocker identity, any applicable `Blocked because` and `Resolution condition`, episode, and attempt limits remain correct;
 - no same-Root continuation or dependent task was dispatched after `replan exhausted` without matching verified or attested reopening;
