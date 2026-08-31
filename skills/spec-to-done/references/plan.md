@@ -34,7 +34,13 @@ Planning reads the complete inputs, writes the resulting PLAN, validates it as f
 
 A reopening call uses the same complete SPEC, PLAN, TRACK, and observable state, plus the exhausted trigger and verified or attested resolution of its stable blocker. It does not create or change an inline Gate. Planning writes the first future-only PLAN of the new episode; Execute validates it and appends the existing named `replan reopened` checkpoint.
 
-The planner returns exactly one of these transient blocks to the executor. These outcomes do not add a gate, canonical state, artifact, or required TRACK field; Execute uses them only to validate PLAN and render the existing checkpoint:
+The planner returns exactly one **internal receipt** to Execute. A receipt is
+transient coordination output: it is never written or copied into TRACK, PLAN,
+REPORT, or `state.md`; it adds no gate, canonical state, artifact, or required
+field. Execute uses it only to validate the PLAN transition and render the
+existing checkpoint.
+
+Maintenance and material replan use these receipts:
 
 ```text
 outcome: PLAN maintenance complete
@@ -46,15 +52,13 @@ trigger_task_id: <T-id>
 previous_plan_version: <N>
 new_plan_version: <N+1>
 Root: <root task ID>
-
-outcome: replan exhausted
-trigger_task_id: <T-id>
-plan_version: <N>
-Root: <root task ID>
-Blocker: BLK-<slug>-<root-task-id>
 ```
 
-Return only the applicable block. Planning does not return attempt counters; Execute derives them from the complete TRACK lineage and copies the validated identity/version values into one checkpoint.
+The exhaustion receipt is defined once beside **Replan exhausted** below.
+Return only the applicable internal receipt and no narration. Planning does not
+return attempt counters; Execute derives them from the complete TRACK lineage
+and copies the validated identity/version values into one checkpoint. Execute
+never persists the receipt itself.
 
 ## The SPEC is required
 
@@ -268,8 +272,17 @@ If observation shows no material strategy change, do not perform these steps. Ap
 
 When no valid continuation remains inside the unchanged SPEC and the triggering Root's episode limits, do not fabricate another remainder or continue that episode. Exhaustion is scoped to that `Root:` and episode; it is not an instruction to discard unrelated future strategy.
 
-Return only the exact `outcome: replan exhausted` block from the operational
-call contract. Do not rename, omit, or supplement its fields.
+Return only this exact internal receipt; never write it into TRACK:
+
+```text
+outcome: replan exhausted
+trigger_task_id: <T-id>
+plan_version: <N>
+Root: <root task ID>
+Blocker: BLK-<slug>-<root-task-id>
+```
+
+Do not rename, omit, supplement, or persist its fields.
 
 The resulting PLAN remains future-only and keeps the current version; do not increment a version solely to declare exhaustion. Remove the attempted trigger and every same-Root continuation in that episode. Preserve each valid task under another Root in its existing relative order. If such a task depended on attempted work, remove that dependency only when verified TRACK state satisfies the exact prerequisite it needs; otherwise the task is not independent and must leave actionable PLAN rather than execute across the exhausted lineage. PLAN contains no continuation beyond the attempt limit, attempted ID, dependency to an ID in TRACK, or different outcome reusing the exhausted ID.
 
