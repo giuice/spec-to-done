@@ -1,140 +1,137 @@
-# Handoff ao master: closure-only confirma falha local no pós-task
+# Handoff ao master: normalização em duas fases regrediu no Luna Low
 
 Data: 2026-08-31
 
-Status: candidata congelada; closure-only Luna Low obteve 4/6 válidas; simplificação normativa necessária
+Status: implementação local passa todos os gates determinísticos; closure-only
+Luna Low obteve **0/6 válidas**; end-to-end e compactação não foram executados
 
-## Estado disponível no Git
+## Estado que precisa ir ao Git
 
-A candidata testada está no commit `6e742a4761d23459931291c97823f3dc9fd26a94`:
+As únicas mudanças normativas estão em:
+
+- `skills/spec-to-done/references/plan.md`
+- `skills/spec-to-done/references/execute.md`
+
+`skills/spec-to-done/SKILL.md` permanece inalterado. Hashes da candidata
+submetida ao modelo:
 
 ```text
 SKILL.md   5f0440b460ac
-plan.md    55e779256622
-execute.md 788cfa214aff
+plan.md    48692d587983
+execute.md 8ab96ff0cd70
 ```
 
-Esta rodada não alterou `SKILL.md`, `plan.md` nem `execute.md`. Os gates já
-registrados para esses hashes continuam sendo 174/174 testes, preservation,
-`quick_validate` de runtime/Core/Bounded/Full, sincronização das candidatas e
-`git diff --check`.
+O workbench e as sessões são locais e ignorados pelo Git. Toda a evidência
+necessária para decisão está abaixo.
 
-O fixture, harness e as sessões Luna são locais e ignorados pelo Git. Como o
-master só enxerga arquivos versionados, toda a evidência decisiva está
-resumida abaixo.
-
-## Experimento closure-only
-
-O fixture começa imediatamente antes de T5:
-
-```text
-state.md: active
-SPEC: Ready
-TRACK: T1–T4 já registrados e reconciliados
-PLAN v1: somente T5 seguida de T6
-produto: já implementado e passando 9/9 checks
-REPORT: ausente
-```
-
-Foram seis chamadas sequenciais e isoladas, exclusivamente com
-`gpt-5.6-luna`, reasoning `low`, usando os três hashes acima. Nenhuma teve
-timeout. Prompt, stdout, stderr, metadados, workspace e score bruto estão
-preservados localmente em:
-
-```text
-evaluation/track-compactness/sessions/task-manager-closure-only/
-```
-
-Essas runs são diagnósticas; seus bytes não entram na compactação.
-
-## Resultado: 4/6 válidas
-
-| Critério | End-to-end 104–109 | Closure-only 1–6 | Leitura |
-|---|---:|---:|---|
-| Run completamente válida | 1/6 | 4/6 | contexto curto ajuda, mas não estabiliza |
-| App/produto/segurança 9/9 | 6/6 | 6/6 | preservado |
-| T5 `partial/unverified` com reload em `Unresolved` | 6/6 | 6/6 | registro da task estável |
-| T5 fechado corretamente por exhaustion do mesmo `Root` | 2/6 | 4/6 | melhora, ainda falha localmente |
-| Nenhuma task tentada permaneceu no PLAN | 2/6 | 6/6 | contexto curto elimina a falha nesta amostra |
-| Nenhuma dependência aponta para task tentada | 5/6 | 6/6 | passou |
-| `Blocker` canônico no registro de T6 | 5/6 | 5/6 | uma perda local permanece |
-| `Blocked because` + `Resolution condition` | 6/6 | 6/6 | preservado |
-| T6 com fechamento nomeado posterior | 4/6 | 5/6 | uma run pulou o fechamento |
-| Ambos os checkpoints Full semanticamente corretos | 2/6 | 4/6 | melhora, ainda abaixo do gate |
-| Sem despacho same-Root após exhaustion | 6/6 | 6/6 | passou |
-| `state.md` fechado depois do REPORT | 6/6 | 6/6 | passou |
-| Final byte-idêntico ao REPORT | 6/6 | 6/6 | passou |
-
-### Resultado exato por run
-
-| Run | Resultado | Estado material |
-|---|---|---|
-| closure-1 | válida | T5 e T6 exhausted; PLAN vazio; checkpoints, contadores, blocker e terminal corretos |
-| closure-2 | válida | mesmo fechamento integral da run 1 |
-| closure-3 | válida | mesmo fechamento integral da run 1 |
-| closure-4 | inválida | T5 recebeu `replan done (plan version 2)` sem continuação do mesmo `Root`; o residual de reload desapareceu; T6 fechou corretamente |
-| closure-5 | inválida | PLAN ficou vazio, mas nenhum checkpoint canônico fechou T5 ou T6; ambos os gates permaneceram efetivamente `replan required`; o task record de T6 perdeu `Blocker` |
-| closure-6 | válida | T5 e T6 exhausted; PLAN vazio; checkpoints, contadores, blocker e terminal corretos |
-
-A reavaliação offline com o scorer atual reproduziu 4 passes e 2 falhas. A
-inspeção manual confirmou os dois defeitos: a run 4 é estruturalmente fechada,
-mas semanticamente perde a linhagem unresolved; a run 5 fecha REPORT/state
-apesar de dois gates abertos. Não há falso negativo do avaliador.
-
-## Diagnóstico
-
-O resultado separa as hipóteses:
-
-- o horizonte longo agrava o problema: a validade subiu de 1/6 para 4/6 e
-  PLAN future-only de 2/6 para 6/6 quando T1–T4 já vieram reconciliadas;
-- o protocolo local também é instável: mesmo começando em T5, uma run escolheu
-  a transição errada para `partial` e outra pulou toda a conclusão canônica.
-
-Portanto, apenas reler `Record and close one task` depois do performer não é
-suficiente. O caso previsto pelo master para falha do fixture isolado se
-confirmou: cabe simplificação estrutural, mantendo a semântica atual.
-
-## Próxima correção limitada
+## Correção implementada
 
 ### `plan.md`
 
-1. Executar uma única `POST-TASK NORMALIZATION` antes de escolher a transição:
-   remover do PLAN todos os IDs já registrados no TRACK, remover/repontar suas
-   dependências, rejeitar `Status: no-op` após task records e preservar uma
-   única `Plan version`. Nenhum receipt sai antes dessa normalização passar.
-2. Dar precedência absoluta a `partial`:
-   - capability indisponível → somente exhaustion do mesmo `Root`;
-   - capability disponível → somente material replan com task futura concreta,
-     novo ID, mesmo `Root`, `Continues: trigger` e versão `N → N+1`.
-3. Rejeitar `replan done` sem estratégia futura concreta, sem incremento de
-   versão ou quando o residual de uma `partial` desaparece sem exhaustion.
+- Um único algoritmo faz snapshot do trigger e grafo antigo, normalização
+  estrutural fase A, seleção exclusiva da transição, resolução de dependências
+  fase B, quality gate e só então emite um receipt.
+- Fase A é future-only e idempotente, sem decidir silenciosamente o destino de
+  dependências quebradas.
+- Fase B possui os quatro destinos autorizados: satisfação exata, repoint para
+  continuation same-Root, retirada do dependente após exhaustion insatisfeito,
+  ou preservação explícita do pré-requisito estreito já verificado.
+- `partial` não entra no replan genérico: capability disponível exige uma
+  continuation concreta; indisponível exige exhaustion do mesmo `Root`.
+- `done/no_op` pode produzir PLAN vazio em replan material somente quando toda
+  a cobertura restante já está satisfeita.
 
 ### `execute.md`
 
-1. Mover, sem duplicar, a seção crítica pós-task, a tabela de transição, os dois
-   templates Full e o predicado compacto de saída para o início operacional da
-   referência.
-2. Tornar o mid-task trigger sequencial: interromper, verificar, anexar o task
-   record canônico com `Gate: replan required` e só então entrar na seção
-   crítica; nunca chamar Plan antes do registro.
-3. Quando uma dependência já tem registro `blocked` ou `failed`, reconciliar o
-   gate existente daquela task; não criar ou decidir outro gate para a
-   dependente.
-4. Reduzir as demais ocorrências de controle de fluxo a referências para essa
-   única seção normativa.
+- A seção `POST-TASK CRITICAL SECTION`, tabela de transição, dois templates Full
+  e predicado compacto foram movidos para o início operacional.
+- Mid-task agora exige `parar → verificar → task record → Plan`; uma dependente
+  não recebe gate quando a pendência real é o gate aberto da prerequisite.
+- Fluxos posteriores apenas referenciam `POST-TASK CLOSE(trigger)`; ownership,
+  Gate vocabulary, exhaustion por `Root`, lineage, blocker, TRACK append-only e
+  terminal owners não mudaram.
 
-Não alterar `SKILL.md`, ownership, vocabulário de Gate, exhaustion por `Root`,
-`Root`/`Continues`/`Reopens`, blocker derivado do Root, TRACK append-only,
-verificação independente ou terminal `REPORT → state → bytes`.
+Foram adicionados oito testes comportamentais: idempotência, snapshot/posição,
+quatro destinos de dependência, `partial` disponível e indisponível, material
+replan vazio legítimo, receipt prematuro e retomada depois de PLAN antes do
+checkpoint.
 
-## Gate seguinte
+## Gates locais
 
-```text
-implementar somente plan.md + execute.md e testes focados
-→ deterministic + preservation + quick_validate + diff
-→ closure-only Luna Low 6/6
-→ end-to-end Luna Low 6/6
-→ somente então considerar a amostra de compactação
-```
+- suíte completa: **182/182**;
+- preservation gate: passou;
+- `quick_validate`: runtime, Core, Bounded e Full passaram;
+- runtime/Full e os `plan.md` das três candidatas estão sincronizados;
+- `git diff --check`: passou.
 
-Não medir compactação nem executar a amostra maior com a candidata atual.
+## Closure-only Luna Low
+
+Amostra válida: runs **7, 8, 13, 14, 15 e 16**, todas sequenciais, isoladas,
+`gpt-5.6-luna`, reasoning `low`, sem timeout e com os hashes acima. As tentativas
+9–12 não chegaram ao modelo: o runner em loop não teve escrita no estado local
+do Codex e saiu em 0,0 s. Seus artefatos de infraestrutura foram preservados,
+mas foram excluídos da amostra e substituídos pelas runs 13–16.
+
+Resultado: **0/6 semanticamente válidas**, contra **4/6** da candidata anterior.
+Os seis produtos continuaram 9/9 e todos persistiram REPORT, fecharam state
+depois dele e emitiram o corpo final byte-idêntico. A regressão é integralmente
+do protocolo de coordenação.
+
+| Critério | Anterior 1–6 | Atual 7,8,13–16 | Leitura |
+|---|---:|---:|---|
+| Run completamente válida | 4/6 | 0/6 | regressão principal |
+| Produto/segurança 9/9 | 6/6 | 6/6 | preservado |
+| T5 com `Verification: unverified` literal | 6/6 | 3/6 | regressão de campo canônico |
+| T5 fechado por exhaustion do próprio `Root` | 4/6 | 2/6 | regressão; três `replan done` indevidos |
+| Nenhuma task tentada permaneceu no PLAN | 6/6 | 3/6 | regressão da normalização |
+| Nenhuma dependência para task tentada | 6/6 | 6/6 | preservado |
+| Ordem permitida | 6/6 | 5/6 | uma run reescreveu a ordem do TRACK |
+| `Blocker` canônico no task record de T6 | 5/6 | 1/6 | maior regressão protegida |
+| `Blocked because` + `Resolution condition` | 6/6 | 6/6 | preservado |
+| T6 com fechamento nomeado | 5/6 | 6/6 | melhorou |
+| Dois templates Full presentes com contagens reais | 4/6 | 5/6 | formato melhorou; semântica não |
+| Sem despacho same-Root após exhaustion | 6/6 | 6/6 | preservado |
+| `state.md` fechado depois de REPORT | 6/6 | 6/6 | preservado |
+| Final byte-idêntico ao REPORT | 6/6 | 6/6 | preservado |
+| Reconciliação integral | 4/6 | 0/6 | gate continua fechado |
+
+### Resultado exato por run
+
+| Run | Funcionou | Reprovou |
+|---|---|---|
+| 7 | T5 canônica; T6 com blocker/campos; T6/T7 fechadas; ordem e terminal corretos | T5 virou `replan done`, criou T7 apesar da capability indisponível e registrou contadores futuros; T6 tentada permaneceu no PLAN sob `Root: T5` |
+| 8 | T5 exhausted corretamente; T6 fechada; ordem e terminal corretos | `Blocker` ausente no task record de T6; T6 tentada permaneceu no PLAN sob Root exhausted |
+| 13 | PLAN vazio; dois checkpoints Full; terminal correto | T5 usou `Verification: partial; ...`, `Unresolved` não preservou a observação exata; `Blocker` de T6 ausente; T5/T6 foram inseridas antes de T2–T4 no TRACK |
+| 14 | PLAN vazio; dois checkpoints Full; ordem e terminal corretos | reescreveu os gates inline de T5/T6 como `replan exhausted`; T5 usou Verification não canônica; `Blocker` de T6 ausente |
+| 15 | T5 inicialmente canônica; dois checkpoints; ordem e terminal corretos | T5 recebeu `replan done` sem continuation e permaneceu tentada no PLAN; residual desapareceu; `Blocker` de T6 ausente |
+| 16 | PLAN vazio; T6 exhausted; ordem e terminal corretos | T5 recebeu `replan done` sem continuation e perdeu o residual; Verification não canônica; `Blocker` de T6 ausente |
+
+## Diagnóstico para decisão
+
+A candidata demonstra que a normalização em duas fases é determinística no
+simulador, mas não reduziu o espaço de interpretação do Luna Low. O erro mudou
+de “checkpoint ausente” para três perdas mais graves e recorrentes:
+
+1. `partial` ainda cai em `replan done` sem continuation em 3/6;
+2. o `Blocker` obrigatório fica apenas no checkpoint e some do task record em
+   5/6;
+3. a normalização future-only, que era 6/6, caiu para 3/6.
+
+Há também uma contradição local de redação a revisar: a seção diz
+“Immediately after appending one task record” e o passo 1 do algoritmo manda
+“Validate and append exactly one canonical task record”. Isso apresenta o
+mesmo append como pré-condição e como primeiro passo. A run 13, que reordenou
+TRACK, e a run 14, que substituiu gates inline por valores de checkpoint, são
+compatíveis com essa fronteira pouco nítida. É uma hipótese causal, não uma
+conclusão provada.
+
+O próximo desenho precisa preservar a melhora estrutural dos templates e do
+terminal, mas tornar inseparáveis três fatos no ponto de escrita: task record
+imutável com gate inline, campos obrigatórios por status — especialmente
+`Blocker` — e exatamente uma transição posterior. Não adicionar mais prosa ao
+planner antes de decidir como eliminar essa duplicidade operacional.
+
+## Gate
+
+Esta candidata está reprovada. O end-to-end não foi executado porque o gate
+closure-only 6/6 falhou; compactação e amostra maior continuam proibidas.
