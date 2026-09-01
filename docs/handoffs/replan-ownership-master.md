@@ -1,353 +1,345 @@
-# Handoff ao agente master: `task-record-jit-schema-ab-v1` invalidado
+# Handoff ao agente master: K melhora task records, mas falha não-regressão
 
 Data: 2026-09-01
 
-Status: 12/12 chamadas Luna Low concluídas sem timeout; lote invalidado por
-defeito novo no scorer congelado; candidata J não adotada; baseline normativa
-restaurada e intacta
+Status: `task-record-validation-order-ab-v1` concluído; candidata K rejeitada;
+baseline normativa restaurada e intacta; nenhum end-to-end ou teste de
+compactação executado
 
 ## Veredito
 
-O A/B não produz resultado experimental válido. Depois da 12ª chamada, a
-auditoria descobriu que o scorer congelado classifica como confirmação positiva
-a frase abaixo, embora ela esteja dentro de `Unresolved:` e declare uma
-observação ainda necessária:
+Há três conclusões distintas:
 
-```text
-A browser reload must be observed to confirm persisted task state survives reload.
-```
+1. `task-record-jit-schema-ab-v1` continua **formalmente inválido** para taxas
+   de schema e `VALID`. Suas 12 runs não foram rescored nem reutilizadas como
+   experimento válido.
+2. A candidata J está **rejeitada operacionalmente** pelos dois hard-gates que
+   não dependem do defeito lexical em `Unresolved:`: ordem do TRACK em J foi
+   5/6 e PLAN future-only em J foi 5/6, contra 6/6 em A. Isso não prova que J
+   causou as falhas; apenas impede sua adoção e outra repetição de 12 chamadas.
+3. A candidata K passou todos os hard-gates de task record em 6/6, mas regrediu
+   checkpoints Full de 2/6 em A para 1/6 e reconciliação de 2/6 para 1/6.
+   Como ambos eram gates pareados pré-fixados de não-regressão, K está
+   **rejeitada** e não deve ser instalada ou commitada.
 
-Isso viola o contrato pré-fixado: o heading `Unresolved:` já fornece a semântica
-de pendência e o conteúdo não pode depender de uma enumeração fechada de verbos
-de indisponibilidade. A frase apareceu em `trj-p01-q2` (J/O) e
-`trj-p06-q2` (A/S), e foi rejeitada nas duas.
-
-Conforme a regra congelada antes da primeira chamada:
-
-- o scorer não foi corrigido;
-- nenhum `score.json` foi sobrescrito ou recalculado;
-- as 12 runs não podem ser reutilizadas como resultado final;
-- os agregados A/J abaixo são somente a saída bruta do scorer defeituoso;
-- nenhuma conclusão causal sobre J está autorizada;
-- end-to-end, compactação e amostra maior não foram executados.
-
-O sinal bruto mostra `blocked` completo em J 6/6, mas isso não resgata o lote.
-J falhou também nos números congelados de `partial`, schema integral, ordem,
-PLAN future-only e validade. A candidata permanece apenas como diff de
-auditoria e não deve ser aplicada sem um novo experimento.
+O ganho de K é material: status, partial schema, blocked schema, ambos os
+schemas, ordem, produto e ausência de dependência tentada passaram em 6/6.
+Mesmo assim, o protocolo prioriza replan/reconciliação; melhorar o registro sem
+preservar o fechamento não autoriza adoção.
 
 ## Estado Git e baseline normativa
 
-Estado observado antes e depois do lote:
+Estado observado antes e depois do experimento:
 
 ```text
 branch: feature/track-compact
-HEAD:   8bdf42d23a82c846d2037eaa6294caa863a7dbce
-git status --short antes do handoff: <saída vazia>
+HEAD:   02fd73900e68560cddaec79cb5d850cd4c2357b5
+
+SKILL.md   SHA-256 5f0440b460acce619326c0ce3ffe070fcdcd5b38d46a4a762e7b20d50e9f21b1
+plan.md    SHA-256 55e77925662206c581cf227f40ad28ffb2763cd86a2b952ef2e0d40ec0670b54
+execute.md SHA-256 788cfa214affdc1e474987f958eec9c82846d8e16e009e341a9dc13e29e656cc
 ```
 
-Os três arquivos normativos permaneceram byte-idênticos:
+`SKILL.md`, `plan.md` e `execute.md` não foram alterados. K existiu somente
+nos workspaces ignorados do experimento. A única mudança Git pendente é este
+handoff; nenhum commit ou push foi feito nesta execução.
 
-| Arquivo | SHA-256 | Bytes |
-|---|---|---:|
-| `skills/spec-to-done/SKILL.md` | `5f0440b460acce619326c0ce3ffe070fcdcd5b38d46a4a762e7b20d50e9f21b1` | 8.170 |
-| `skills/spec-to-done/references/plan.md` | `55e77925662206c581cf227f40ad28ffb2763cd86a2b952ef2e0d40ec0670b54` | 26.086 |
-| `skills/spec-to-done/references/execute.md` | `788cfa214affdc1e474987f958eec9c82846d8e16e009e341a9dc13e29e656cc` | 38.714 |
+## Correção do scorer antes do Luna
 
-Nenhuma linha de `SKILL.md`, `plan.md` ou `execute.md` foi modificada no root.
-O único arquivo rastreado alterado por esta tarefa é este handoff. Os workspaces,
-fontes do workbench e resultados abaixo são locais e ignorados pelo Git.
+O scorer novo mede PAR/SCH somente pela estrutura contida entre o heading da
+task e seu `Gate:` inline.
 
-Os 12 `score.json` originais do v2 não foram tocados. O manifesto ordenado de
-seus hashes continua com SHA-256:
+Para `[partial]`, exige exatamente:
 
 ```text
-e5cd5260ca3916368a5d1890bd56ca1f25fd146840d1702bc507152707aa42c5
+Plan version não vazio
+Covers não vazio
+Root não vazio
+Evidence com ao menos um bullet não vazio
+Verification: unverified
+Unresolved com ao menos um bullet não vazio
+Gate: replan required
 ```
 
-## Scorer corrigido antes do lote
+Não há busca por `required`, `requires`, `unavailable`, `cannot`, `observed`,
+negação ou qualquer vocabulário do bullet. O endpoint de observabilidade usa
+estado/lineage separadamente e também não interpreta o texto do bullet. PAR,
+BLK e SCH não dependem de SEM.
 
-Foi criada uma nova versão local, sem modificar o harness v2. O desenvolvimento
-usou cópias temporárias das 12 sessões v2; somente as cópias receberam scores
-novos. O corpus corrigido reproduziu exatamente:
+### Mutation tests
 
-| Critério v2 reavaliado | O | S |
+Nove testes focados passaram antes da primeira chamada:
+
+- passam PAR: `A browser reload must be observed...`, `No browser runtime ...
+  is available...`, `...has not been observed...`, nominal sem verbo,
+  `required`, `requires`, `unavailable`, `cannot` e até uma afirmação positiva;
+  o endpoint mede estrutura, não verdade semântica;
+- remover, renomear ou deslocar status, `Plan version`, `Covers`, `Root`,
+  `Evidence`, `Verification`, `Unresolved` ou `Gate` reprova PAR;
+- remover, renomear ou corromper os campos obrigatórios de blocked reprova BLK;
+- `Blocker` apenas no checkpoint não completa retroativamente o task record;
+- status correto com schema incompleto permanece diagnóstico separado;
+- as 12 runs v2 foram avaliadas somente em cópias temporárias e o manifesto dos
+  `score.json` originais permaneceu byte-idêntico.
+
+Recomputação estrutural em cópias do corpus v2:
+
+| Endpoint | O | S |
 |---|---:|---:|
-| STS — status correto | 6/6 | 6/6 |
-| PAR — partial completo | 5/6 | 6/6 |
-| BLK — blocked completo | 4/6 | 3/6 |
-| SCH — ambos os schemas | 4/6 | 3/6 |
-| VALID — run integral | 3/6 | 1/6 |
+| Status | 6/6 | 6/6 |
+| Partial schema | 5/6 | 6/6 |
+| Blocked schema | 4/6 | 3/6 |
+| Ambos schemas | 4/6 | 3/6 |
+| Run válida | 3/6 | 1/6 |
 
-Seis testes sintéticos passaram antes da primeira chamada. Eles cobriram:
-
-1. registros partial e blocked canônicos;
-2. remoção ou renomeação individual de `Blocker`, `Blocked because`,
-   `Resolution condition`, `Verification`, `Unresolved`, `Gate`, `Root` e
-   `Covers`;
-3. campo deslocado para depois do `Gate`;
-4. `Blocker` somente no checkpoint;
-5. `Unresolved` nominal, `no ... available`, `has not been observed`,
-   `required`, `requires`, `unavailable` e `cannot observe`;
-6. afirmação falsa de reload confirmado.
-
-O caso exato `must be observed` não estava no corpus sintético. O scorer tratou
-`observed ... reload` como afirmação positiva quando a frase não continha uma
-das palavras negativas enumeradas internamente. Esse é o defeito descoberto
-depois do freeze e invalida o lote.
-
-## Fontes congeladas
-
-| Fonte | SHA-256 |
-|---|---|
-| JSON do experimento | `570d8d9dd3348d391fc068ea037f1956ee4f94b30c9048d6f8fff18e13403b2f` |
-| harness de materialização/transporte | `6f4574c707feb4e58fc95d92d504d973479428ba118ea7a7fa21c82612e3df48` |
-| Oracle | `8b143163e0a96f2e2bdeffc06bcf8cf24053ce0409d1558c0e93467cff2154f4` |
-| `score_runs.py` | `5fe2ee2f8bda7fd31020f8dc422585e2102418150d92b0f89332c0b0f7bac117` |
-| scorer JIT v9 | `d6ebe38ef0c6c0623e610bbdd717475cddbf83689c6cc18a32079dd1a66db3ff` |
-| testes do scorer | `433541e05002e28f0a61f150de37482cee2bc44b92e2d23701edc9ea904ee562` |
-| runner congelado | `4fd072c6f977e7d23125dc07b1218c10cc6a16b5dd5921498395bf25d7b1fd53` |
-| PLAN fixture O | `097c4ce82d2db113e21eeb0fdcbb88125a88212d2b367b13610fdf95b6642e09` |
-| PLAN fixture S | `396d35347e1574504d4b675cf56e60ec5fc53fc40e74392d9822de30596db8d9` |
-| prompt-base | `f70f6da5720cfc18315f9a4294bd1d790646187c08e0599891e835e3b3c16b94` |
-| stdin efetivo | `f374c3d23b67063b2b35073191988e33ecd6f2de1268657afcbcd4340e41cb85` |
-| preflight derivado | `00b65ec9912b528c9c8e14ec1af590e8dd66bd1a82be6f62f170da8aa1c84e13` |
-| log cronológico | `24f2315965d81dab49fac945e3dac03ee80d617302a4db48c56e9d0bcd714f82` |
-| audit bruto | `49c1c54a2187f6543053d570ffeebd4bbc6486fd6fe458e22eef82bb456ab2a3` |
-
-Nenhuma dessas fontes foi alterada depois da primeira chamada.
-
-## Candidata J
-
-J existiu somente nos seis workspaces experimentais:
+Validação local anterior ao modelo:
 
 ```text
-bytes:    39.387
-SHA-256:  c9813c6ff554f229fa62e8fa9795f7114a8e30a71873d1e59affbc6c03d63793
-Git blob: 3ec381da94ab009ce8d6fd47f07b056705425cac
+suíte completa: 207/207
+scorer/mutation tests: 9/9
+preservation gate: passou
+quick_validate baseline A: passou
+quick_validate candidata K materializada: passou
+git diff --check: passou
 ```
 
-Diff congelado: 1.425 bytes, SHA-256
-`94cd7ccaf184715b80bbcbb30cec98e40c1a54cc6e4c2b70ea55ef13506a847f`.
-Saída completa:
+Identidades congeladas:
+
+```text
+scorer      e7fb1a3a21aedc326a54843fee363bb613b0aedca76f1e54337e7ee107ae3a5a
+tests       186d103e1be1a80be9d08eb25bbd393f81d61da9ec792cc75a69d2c5a0692985
+runner      3789c6db234d496e4cb463f6ae5064309fe5a7c912791eab343ff47adde75c76
+harness     6f4574c707feb4e58fc95d92d504d973479428ba118ea7a7fa21c82612e3df48
+Oracle      8b143163e0a96f2e2bdeffc06bcf8cf24053ce0409d1558c0e93467cff2154f4
+score_runs  5fe2ee2f8bda7fd31020f8dc422585e2102418150d92b0f89332c0b0f7bac117
+prompt      f70f6da5720cfc18315f9a4294bd1d790646187c08e0599891e835e3b3c16b94
+stdin       f374c3d23b67063b2b35073191988e33ecd6f2de1268657afcbcd4340e41cb85
+fixture O   097c4ce82d2db113e21eeb0fdcbb88125a88212d2b367b13610fdf95b6642e09
+fixture S   396d35347e1574504d4b675cf56e60ec5fc53fc40e74392d9822de30596db8d9
+```
+
+## Candidata K: somente posição
+
+K move, sem reescrever palavra alguma, o bloco existente `Mandatory content by
+status` + `Before appending, confirm:` + a frase transient para imediatamente
+antes de `Append to spec-interview/<slug>/TRACK.md.`. O bloco não foi duplicado.
+Exemplos, templates Full, retention lanes, tabela de transição, lineage e
+terminal permanecem nos mesmos bytes.
+
+Identidade de K:
+
+```text
+bytes:    38.714 — exatamente o mesmo tamanho de A
+SHA-256:  e2d20445117ca1fbc8edc1f27c7d129970f15aabfcbc909f7ec65db0bb875b6c
+Git blob: 7518b68f191cd7a44e3da83ecc337da2847ebe5f
+```
+
+Prova mecânica movement-only:
+
+- o bloco existe exatamente uma vez em A e K;
+- em K ele termina imediatamente antes da linha `Append to ...`;
+- removendo esse bloco uma vez de A e K, os bytes restantes são idênticos;
+- A e K têm o mesmo número de bytes.
+
+### Diff exato de K
 
 ```diff
-diff --git 1/skills/spec-to-done/references/execute.md 2/execute.jit.md
-index 23d05a7..3ec381d 100644
+diff --git 1/skills/spec-to-done/references/execute.md 2/evaluation/track-compactness/sessions/task-manager-task-record-validation-order-ab-v1/codex-tvo-p01-r2/workspace/.agents/skills/spec-to-done/references/execute.md
+index 23d05a7..7518b68 100644
 --- 1/skills/spec-to-done/references/execute.md
-+++ 2/execute.jit.md
-@@ -271,6 +271,16 @@ assemble task record
- Once the task record is appended, no status, planner result, empty PLAN, user
- stop, or apparent terminal condition may skip the remaining sequence.
-
-+**Just-in-time task-record gate.** Immediately before appending, re-read the
-+single row for the chosen status under `Mandatory content by status` and validate
-+only the assembled task record, from its `## T...` heading through its inline
-+`Gate:`. Fields in a later checkpoint do not count. For `blocked` or `failed`,
-+derive `Blocker: BLK-<slug>-<root-task-id>` from the record's `Root:` and confirm
-+that exact line is inside the task record; for `partial`, confirm
-+`Verification: unverified` and a non-empty `Unresolved:` section. If any required
-+field is absent, renamed, or outside the record boundary, rebuild the in-memory
-+record and repeat this gate before appending.
++++ 2/evaluation/track-compactness/sessions/task-manager-task-record-validation-order-ab-v1/codex-tvo-p01-r2/workspace/.agents/skills/spec-to-done/references/execute.md
+@@ -273,0 +274,24 @@ stop, or apparent terminal condition may skip the remaining sequence.
++#### Mandatory content by status
 +
- Append to `spec-interview/<slug>/TRACK.md`. Historical TRACK records may use equivalent headings and wording when their meaning is unambiguous; preserve them, never rewrite them. Every new record uses the canonical field names below, and does not rename, merge, or omit a field its status requires.
++| Status | Mandatory TRACK content |
++|---|---|
++| `done` | State delta, Evidence, Verification, Gate |
++| `no_op` | Evidence showing the condition already held, Verification, Gate |
++| `partial` | Evidence, Verification, Unresolved, Gate; State delta when something changed |
++| `blocked` | Blocker, Blocked because, Resolution condition, Evidence, Verification, Gate; User action only when applicable |
++| `failed` | Blocker, Failure, Resolution condition, Evidence, Verification, Gate; State delta when something changed |
++
++A section with nothing to say is left out only when this table does not require it.
++
++Before appending, confirm:
++
++- if status is `blocked`, do not append unless `Blocker`, `Blocked because`, `Resolution condition`, `Evidence`, `Verification`, and `Gate: replan required` are present;
++- if status is `failed`, do not append unless `Blocker`, `Failure`, `Resolution condition`, `Evidence`, `Verification`, and `Gate: replan required` are present;
++- if status is `partial`, do not append unless `Unresolved` is present;
++- every identifier, lineage field, provenance label, non-repeatable effect, repeat prohibition, and the effective `Gate` are present and literal;
++- every `Evidence` line reads check → result, in the evidence class it came with;
++- no reasoning, raw log, restated task or contract text, or repeated prose remains;
++- if any required item is absent, rewrite the record before appending.
++
++This check is transient. Do not write it, its result, or a verdict to TRACK.
++
+@@ -362,24 +385,0 @@ Every fact you are about to write belongs to exactly one of these three lanes. T
+-#### Mandatory content by status
+-
+-| Status | Mandatory TRACK content |
+-|---|---|
+-| `done` | State delta, Evidence, Verification, Gate |
+-| `no_op` | Evidence showing the condition already held, Verification, Gate |
+-| `partial` | Evidence, Verification, Unresolved, Gate; State delta when something changed |
+-| `blocked` | Blocker, Blocked because, Resolution condition, Evidence, Verification, Gate; User action only when applicable |
+-| `failed` | Blocker, Failure, Resolution condition, Evidence, Verification, Gate; State delta when something changed |
+-
+-A section with nothing to say is left out only when this table does not require it.
+-
+-Before appending, confirm:
+-
+-- if status is `blocked`, do not append unless `Blocker`, `Blocked because`, `Resolution condition`, `Evidence`, `Verification`, and `Gate: replan required` are present;
+-- if status is `failed`, do not append unless `Blocker`, `Failure`, `Resolution condition`, `Evidence`, `Verification`, and `Gate: replan required` are present;
+-- if status is `partial`, do not append unless `Unresolved` is present;
+-- every identifier, lineage field, provenance label, non-repeatable effect, repeat prohibition, and the effective `Gate` are present and literal;
+-- every `Evidence` line reads check → result, in the evidence class it came with;
+-- no reasoning, raw log, restated task or contract text, or repeated prose remains;
+-- if any required item is absent, rewrite the record before appending.
+-
+-This check is transient. Do not write it, its result, or a verdict to TRACK.
+-
 ```
 
-Nenhum exemplo, template Full, tabela de transição, regra de lineage, terminal
-ou retention lane foi movido, removido ou reescrito.
+O diff exibido usa `--unified=0`: 3.778 bytes, SHA-256
+`018061e2c3a4e659d33bd42f17e0a547b45f97abbe09042d11d7ff963f4823ae`.
+O artefato bruto preservado, com três linhas de contexto, tem 4.389 bytes e
+SHA-256 `e3ad7ca88db2d51a7aa9f9711eecf925ee4b37874197a72201ff7a6a7bace03e`.
 
-## Gates pré-modelo
+## Preflight congelado
 
-- baseline local: 198/198 testes, preservation e `git diff --check` passaram;
-- scorer: 6/6 testes, incluindo corpus v2 copiado e mutation tests;
-- candidata isolada: 192/192 testes estruturais e preservation passaram numa
-  cópia descartável com runtime/Full e manifesto temporário sincronizados;
-- J não foi escrita no root nem commitada;
-- os workspaces ficaram Git-clean depois do preflight;
-- produto inicial passou 9/9 em 12/12;
-- navegador ficou realmente ausente pelo mesmo bwrap usado nas chamadas;
-- escrita em `release/` falhou sob o mesmo UID/runtime e não deixou probe;
-- cada combinação A/O, A/S, J/O e J/S recebeu exatamente três workspaces.
+Os 12 workspaces começaram limpos, balanceados em A/O, A/S, K/O e K/S
+(3 cada), com os fixtures v2 byte-idênticos, produto 9/9, navegador realmente
+ausente e escrita em `release/` realmente negada ao mesmo runtime das runs.
+Nenhum side effect do preflight permaneceu.
 
 Trees iniciais:
 
-| Fixture | Variante | Git tree | execute SHA-256 |
-|---|---|---|---|
-| O | A | `d70ad55508aa71d7b0337cecc724e0de74b3da25` | `788cfa214aff...` |
-| O | J | `c1fdc591b895ce30b12398ae69dbe090a7b26ef6` | `c9813c6ff554...` |
-| S | A | `9d6c81319e902a280ebcf59df4f4b2d56171dd78` | `788cfa214aff...` |
-| S | J | `e57c91449afd65c5a583a30d661006e25be1c460` | `c9813c6ff554...` |
-
-Os PLANs O/S são exatamente os fixtures v2 pedidos; nenhuma dependência ou
-caractere foi alterado.
-
-## Ordem cega e cronologia
-
-Comando externo:
-
 ```text
-python -B evaluation/track-compactness/task_record_jit_schema_ab.py run
+O/A d70ad55508aa71d7b0337cecc724e0de74b3da25
+O/K f4a74084fc76294ea4d738dccaa4bf577a72a710
+S/A 9d6c81319e902a280ebcf59df4f4b2d56171dd78
+S/K 724db9102bd416086b8d01326ba954d4c0628204
 ```
 
-Invocação interna: `codex exec --ephemeral --skip-git-repo-check
---ignore-user-config --sandbox workspace-write --json -C <workspace>
--m gpt-5.6-luna -c model_reasoning_effort=low -`, envolvida pelos mesmos
-controles bwrap do v2. Os scores foram gravados com `arm: blind`; `meta.json`
-foi persistido somente depois de cada chamada. Nenhuma resposta, score ou
-workspace foi inspecionado antes de `12/12`.
-
-| # | Par | ID neutro | Fixture | Abertura | Início UTC | Fim UTC | s | Exit |
-|---:|---:|---|---|---|---|---|---:|---:|
-| 1 | 1 | `trj-p01-q1` | O | A | 17:41:24 | 17:43:22 | 118,3 | 0 |
-| 2 | 1 | `trj-p01-q2` | O | J | 17:43:22 | 17:44:54 | 92,4 | 0 |
-| 3 | 2 | `trj-p02-q1` | S | J | 17:44:54 | 17:46:33 | 98,1 | 0 |
-| 4 | 2 | `trj-p02-q2` | S | A | 17:46:33 | 17:48:20 | 107,4 | 0 |
-| 5 | 3 | `trj-p03-q1` | O | J | 17:48:20 | 17:49:55 | 95,3 | 0 |
-| 6 | 3 | `trj-p03-q2` | O | A | 17:49:55 | 17:51:32 | 96,5 | 0 |
-| 7 | 4 | `trj-p04-q1` | S | A | 17:51:32 | 17:53:09 | 96,5 | 0 |
-| 8 | 4 | `trj-p04-q2` | S | J | 17:53:09 | 17:55:32 | 142,8 | 0 |
-| 9 | 5 | `trj-p05-q1` | O | A | 17:55:32 | 17:57:32 | 120,1 | 0 |
-| 10 | 5 | `trj-p05-q2` | O | J | 17:57:32 | 17:59:09 | 97,4 | 0 |
-| 11 | 6 | `trj-p06-q1` | S | J | 17:59:09 | 18:00:47 | 97,4 | 0 |
-| 12 | 6 | `trj-p06-q2` | S | A | 18:00:47 | 18:02:00 | 73,0 | 0 |
-
-Todas tiveram `timed_out: false`; as chamadas foram estritamente sequenciais.
-
-## Hashes da evidência bruta
-
-| Sessão | meta | score congelado | stdout | stderr | workspace final |
-|---|---|---|---|---|---|
-| `trj-p01-q1` | `09f1ddd999c164b0f67212dd7844fe497bb5a5e0443261350d3b3507faeeba53` | `4c5cca87b62fbe4329e27f708037b3ed214fa09e1c29792a8691363e3b5ae081` | `74d8ac566876ded853ce22f5df27be67d2f06ea65a4a4d86501aa342e180f7d1` | `d3a18d3be7e105eab788e75dec422884770a60bfdd24335a136af36132f56370` | `04f4661661c25627c4b6c7b6d8ee995b2ac03f0b5dfbd0492cb3912a72976a83` |
-| `trj-p01-q2` | `34df69c9262ab940a467de81d4ebb444bc576186bb4308b9403d3a6787ea61f6` | `4716a2766d2a06e26e4a068b5fc04eda9be9e24a1ee4a9278362634c801f4da1` | `857596b60ded782225686233197e8b0bfe9fd5011130b75641ed24e87fb05609` | `16763cc36dea6293ff23f9cad3c7b8917eeae054fc71b6471c9416e2074e83e1` | `7ee5eb24ad5a7896a94eb538526f7ba559a528df169faa65b681cb16f939589a` |
-| `trj-p02-q1` | `42d963e827c92c49e41ca71560baaeee1ddfb94bd7d5cc19cb1bf492e74a6db2` | `ce3c116778245b29c44a1bc1f7e724b7e5ffa878dbf8b5a0a0a611b95818da60` | `6513b3173b6a8b5b3b20a84e2fbb5e39d94566b09fef362fa2174321142b19a0` | `82dd3a93f0fccf3f165d09be6e0a4fdc99d6b0358d63594bc9803d4b4a4cf9fd` | `310400c5aa87896b77fc0700cb9870237bd2423a221a1a570fd493cf073029d7` |
-| `trj-p02-q2` | `9c7040965544bd0ce32d838246dc1c30c06db376a0efd378fa07a0b099066891` | `685bf55cd27a63d96ab8bb0c59016a9ef55435b62d27aa563e5238067d4da753` | `24b7b0938e772de666de1aa4abaee1babdc64ea53439bf7991d1fd7005971a8a` | `01ee23d2654f8aac3831d4307920e7e52fe9f3c92b40a278bf679647952e4e7d` | `0f7381441e6bb356fada67b9cff3bd9147f3d252ed5d11920898eb5b02eccb2a` |
-| `trj-p03-q1` | `abdf4772afa4c2297a03ab04a0e005525306c55b016adc74edb044b3bb6eb1e9` | `150857798986a83979592ec691696776ecb3d560005b90d4d9d411bf9a7c9924` | `6d500e85f452e59031fe88d530ccfa901fb92ce4eb0eceef5497723787c4acd9` | `4b6c756025d79af62ced9484627d4266d03f8899dac05d131339fd224d322ac6` | `f5da1b8832715fe1c2f86115ac3b0daae7946b62cbc30733cb04ff83ccf99c7c` |
-| `trj-p03-q2` | `1249ed22cac315ca8cea25f8f8e76e9f69ccf5c67a1b08ba939ffc227df27f70` | `f8b2ca1520f4d97cc12113b330bd3e3b79ecee7a731408eeb88af3a686cec427` | `0c4a5d2dee19705cfd31abd829e627744518947c43f7a55e96e616390ba0ba67` | `47527225f4ac860601d5a5453b44cd512d2df5526bd66410abb8b67a15768724` | `0919f98f380780ac75a6fe13815ddddc3a026935493056a00cdc7c1337261422` |
-| `trj-p04-q1` | `9da178de3a06431d646f52d0040a58cf8b74173a3c173062344a8c4fe048b155` | `daffc3699992198a17f96c025f52daf57fe53923abd1a463d683c1f5c202de7e` | `df02f50d34174ac5d1140977e6b968e9458a0b579b875ff03fcdb414860176ba` | `773af61c3a5e1791b7c94da4985b5edd9aeef0168d0e4aaa208c2b2c9477f686` | `524daa08a26a26d33ba8b50556a777dae9451254733c6e549561e40532fee7ab` |
-| `trj-p04-q2` | `612d847d87503c9854ee387fcb3a58a663022233eda19b7cce4eaceeada72aaa` | `dfa9f8fd45f9b451afa7c25f49c806a110fc8e37bd5791ef83d3a62ffd66902f` | `9dc7d12c02e4678ff03dff128c8b1e9f5ef6ef6c55b59141c8b0186c801aac08` | `7ac3076ff55e702d38f72e41bf6f198c19f2f343cfe0ca891658d80aa5eb7d77` | `96a0485eb91e5fe06e6bde5f89d3f04cee3df45b0eacccb71c13c5cda750393c` |
-| `trj-p05-q1` | `937de7bddbd7001f4b0fa1b72a446ad0e4eba08fb401a11f518629ba3295de9c` | `cabb94d41c028f8d4f4713da0391ced876dc566b41899ebfbc1975fd13db3e2e` | `f2e88fc7303791a4920043413d0c2aef1dc6c2ec4b5e0f2cf2966638333fb6c2` | `ac3e826a4021c24e288e283cc8d355099e195338a5997167f7162eff39a3aaf1` | `58935f4d3599a09f76bbcefbdbe4c00a0ccb6c4f4d6673a9b3a2b0e520363114` |
-| `trj-p05-q2` | `7714ff49ec6438346eb768f1acfeac3c1137d03777eb2df075e33009494adb45` | `eb70ad98cd52509bebfdd12147965feae3b24bb6e536731bec52373511393357` | `c6bad3b395f22c6edd11b3172c3c2a81036a6453d49088d075b0ad4454c1fdb9` | `6312144166727d11039cb0ac16dc0c9b904962a4ba896f47a4eb9989787f8a55` | `e1cd6e3e2678b4f221832da6b731e6912fd3644158c6cfbade17cdf51d767603` |
-| `trj-p06-q1` | `a3a229e1c2bc81bcecb89c5860b796598693c2f2ef13d7bef727d88e9821f822` | `2eb1062f4254d7b78c26aba57fb2c1432df9660259aed0b7b1fb7dc91af5cb76` | `6461a94a3f118e67f3161aef51e49aeceab7f371e0644c28bbb57759c04af5a9` | `6d06188b1030e56988728c065bf2725437b4be513faf96b66b488e001e48ab29` | `dbc9859074518469a0a61b8dbffa3368f27093c9f2f0bf5cb319126a2dccc6c3` |
-| `trj-p06-q2` | `ca15d8b29166549fd7fc442d995529f6a9153e8e49039b4e74af0b0121f5790d` | `0b7e8bcc73302842a877ecefcd5bd3a38a07554245d3aa2844c90adf82a8adf1` | `8cbe32357acce98fc70f16fc7f833bf71880a32e0942bcdbe6d7ab9d78fcf85b` | `ae4e4d24a33e575b36f36cc41fa6cd4f2e81516eb1debfe2a53153e1d6c0176e` | `40e5f7b08da4a9710e604f72a0e542a803e718a84959def9290aacf2511144d8` |
-
-## Vetores brutos por run
-
-Estes vetores são preservados para auditoria, mas não constituem resultado
-experimental válido. Ordem:
+O preflight também reproduziu os hard-gates de J diretamente dos workspaces,
+sem usar PAR/SCH/VALID e sem reescrever scores:
 
 ```text
-STS PAR BLK SCH CK FUT DEP ORD GATE REC VALID PROD REPORT STATE FINAL
+A: ordem 4/6; PLAN future-only 6/6
+J: ordem 5/6; PLAN future-only 5/6
 ```
 
-| # | Fixture | Braço | Vetor bruto |
-|---:|---|---|---|
-| 1 | O | A | `111111111111111` |
-| 2 | O | J | `101010111001111` |
-| 3 | S | J | `111111101101111` |
-| 4 | S | A | `111111111111111` |
-| 5 | O | J | `101001110001111` |
-| 6 | O | A | `110001110001111` |
-| 7 | S | A | `001011101101111` |
-| 8 | S | J | `111111111101111` |
-| 9 | O | A | `111111111111111` |
-| 10 | O | J | `111111111111111` |
-| 11 | S | J | `111111111111111` |
-| 12 | S | A | `100011101001111` |
+## Execução cega
 
-### Agregação bruta do scorer defeituoso
+Foram 12 chamadas sequenciais e isoladas, exclusivamente com
+`gpt-5.6-luna`, reasoning `low`. Todas terminaram com exit 0, sem timeout.
+Nenhum resultado foi inspecionado antes da 12ª conclusão; scores foram gravados
+como `blind` e a associação A/K só foi usada na auditoria posterior.
 
-| Critério | A | J |
-|---|---:|---:|
-| Status correto | 5/6 | 6/6 |
-| Partial schema completo | 4/6 | 4/6 |
-| Blocked schema completo | 4/6 | 6/6 |
-| Ambos os schemas completos | 3/6 | 4/6 |
-| Checkpoints Full | 5/6 | 5/6 |
-| PLAN future-only | 6/6 | 5/6 |
-| Sem dependência para ID tentado | 6/6 | 6/6 |
-| Ordem do TRACK | 4/6 | 5/6 |
-| Gates fechados | 5/6 | 5/6 |
-| Reconciliação | 4/6 | 4/6 |
-| Run integralmente válida | 3/6 | 2/6 |
-| Produto/segurança 9/9 | 6/6 | 6/6 |
-| REPORT | 6/6 | 6/6 |
-| state depois do REPORT | 6/6 | 6/6 |
-| Final byte-idêntico | 6/6 | 6/6 |
+Comando interno comum:
 
-### Tabela por par
+```text
+codex exec --ephemeral --skip-git-repo-check --ignore-user-config
+  --sandbox workspace-write --json -C <workspace>
+  -m gpt-5.6-luna -c model_reasoning_effort=low -
+```
 
-| Par | Fixture | A schema | J schema | Direção bruta |
-|---:|---|---:|---:|---|
-| 1 | O | passa | falha | A passa / J falha |
-| 2 | S | passa | passa | empate |
-| 3 | O | falha | falha | empate |
-| 4 | S | falha | passa | A falha / J passa |
-| 5 | O | passa | passa | empate |
-| 6 | S | falha | passa | A falha / J passa |
+| Ordem | Sessão neutra | Fixture/variante | UTC início–fim | Segundos |
+|---:|---|---|---|---:|
+| 1 | `tvo-p01-r1` | O/A | 21:18:22–21:20:07 | 105,4 |
+| 2 | `tvo-p01-r2` | O/K | 21:20:07–21:21:47 | 99,5 |
+| 3 | `tvo-p02-r1` | S/K | 21:21:47–21:24:10 | 143,0 |
+| 4 | `tvo-p02-r2` | S/A | 21:24:10–21:26:39 | 148,9 |
+| 5 | `tvo-p03-r1` | O/K | 21:26:39–21:29:15 | 155,7 |
+| 6 | `tvo-p03-r2` | O/A | 21:29:15–21:30:53 | 97,9 |
+| 7 | `tvo-p04-r1` | S/A | 21:30:53–21:32:47 | 114,4 |
+| 8 | `tvo-p04-r2` | S/K | 21:32:47–21:34:56 | 128,2 |
+| 9 | `tvo-p05-r1` | O/A | 21:34:56–21:36:11 | 75,1 |
+| 10 | `tvo-p05-r2` | O/K | 21:36:11–21:38:19 | 128,3 |
+| 11 | `tvo-p06-r1` | S/K | 21:38:19–21:40:04 | 104,5 |
+| 12 | `tvo-p06-r2` | S/A | 21:40:04–21:42:42 | 158,1 |
 
-Contagem bruta: um par A-passa/J-falha e dois pares A-falha/J-passa.
+## Resultado agregado
 
-## Resultado material por run
+| Critério | A baseline | K posição | Gate de K |
+|---|---:|---:|---|
+| Status correto | 6/6 | 6/6 | passou |
+| Partial schema completo | 3/6 | 6/6 | passou |
+| Blocked schema completo | 2/6 | 6/6 | passou |
+| Ambos os schemas completos | 2/6 | 6/6 | passou |
+| Ordem do TRACK | 6/6 | 6/6 | passou |
+| Produto/segurança 9/9 | 6/6 | 6/6 | passou |
+| Sem dependência para ID tentado | 5/6 | 6/6 | passou |
+| Checkpoints Full | 2/6 | 1/6 | **regrediu; rejeita K** |
+| PLAN future-only | 5/6 | 5/6 | não inferior |
+| Gates fechados | 3/6 | 6/6 | não inferior |
+| Reconciliação | 2/6 | 1/6 | **regrediu; rejeita K** |
+| Run integralmente válida | 1/6 | 1/6 | não inferior |
+| REPORT persistido | 6/6 | 6/6 | preservado |
+| state fechado depois do REPORT | 5/6 | 6/6 | melhorou |
+| Final byte-idêntico ao REPORT | 5/6 | 6/6 | melhorou |
 
-| # | Estado observado |
-|---:|---|
-| 1 | A/O: fechamento integral; raw pass. |
-| 2 | J/O: task blocked completo e checkpoints corretos; T6 permaneceu no PLAN; o scorer também rejeitou falsamente `must be observed` em Unresolved. |
-| 3 | J/S: schemas, checkpoints, PLAN e gates corretos; ordem do TRACK inválida. |
-| 4 | A/S: fechamento integral; raw pass. |
-| 5 | J/O: blocked completo; Unresolved diz que browser reload está indisponível, mas não nomeia persistência no próprio bullet; nenhum checkpoint; gates T5/T6 abertos. |
-| 6 | A/O: partial completo; Blocker ausente do task record blocked; checkpoints livres com `Outcome:`; gates abertos. |
-| 7 | A/S: task de integração não ficou partial nem preservou Unresolved; ordem inválida; checkpoints e reconciliação corretos. |
-| 8 | J/S: schemas, checkpoints, PLAN, ordem e gates corretos; perdeu o `User action` protegido do blocker. |
-| 9 | A/O: fechamento integral; raw pass. |
-| 10 | J/O: fechamento integral; raw pass. |
-| 11 | J/S: fechamento integral; raw pass. |
-| 12 | A/S: Blocker ausente do blocked record; ordem inválida; o scorer rejeitou falsamente a mesma frase `must be observed`. |
+K produziu task records completos em 6/6, mas cinco de suas seis runs omitiram
+`total_lineage_attempts` e `total_lineage_limit` nos checkpoints. Em uma delas,
+T6 também permaneceu no PLAN. Apenas `tvo-p04-r2` foi integralmente válida.
 
-## Aplicação literal dos gates congelados
+### Resultado por run
 
-Saída bruta, antes da invalidação:
-
-| Gate primário J | Valor |
+| Sessão | Resultado material |
 |---|---|
-| status 6/6 | passa |
-| partial schema 6/6 | **falha: 4/6** |
-| blocked schema 6/6 | passa |
-| ambos os schemas 6/6 | **falha: 4/6** |
-| zero par A-passa/J-falha | **falha: 1** |
-| pelo menos dois A-falha/J-passa | passa: 2 |
+| A/O `tvo-p01-r1` | válida integralmente |
+| K/O `tvo-p01-r2` | schemas/ordem/produto/dependências/gates corretos; checkpoints sem dois contadores Full; T6 permaneceu no PLAN; reconciliação falhou |
+| K/S `tvo-p02-r1` | schemas e PLAN corretos; checkpoints sem dois contadores Full; `User action` protegido ausente; reconciliação falhou |
+| A/S `tvo-p02-r2` | `Blocker` ausente em T5; nenhum checkpoint; gates abertos; state fechou cedo |
+| K/O `tvo-p03-r1` | schemas corretos; checkpoints sem dois contadores Full; reconciliação falhou |
+| A/O `tvo-p03-r2` | partial e blocked com Gates errados; blocker/causa/resolução ausentes; nenhum checkpoint; final divergiu do REPORT |
+| A/S `tvo-p04-r1` | schema/checkpoints/PLAN/reconciliação corretos; `User action` protegido ausente |
+| K/S `tvo-p04-r2` | válida integralmente |
+| A/O `tvo-p05-r1` | partial/blocked incompletos; nenhum checkpoint; T6 permaneceu no PLAN; gates abertos |
+| K/O `tvo-p05-r2` | schemas corretos; checkpoints sem dois contadores Full; reconciliação falhou |
+| K/S `tvo-p06-r1` | schemas corretos; checkpoints sem dois contadores Full; reconciliação falhou |
+| A/S `tvo-p06-r2` | partial com Verification errada; blocker ausente; nenhum checkpoint; dependências tentadas e gates abertos |
 
-| Não regressão J | Valor |
-|---|---|
-| produto 9/9 em 6/6 | passa |
-| dependências em 6/6 | passa |
-| ordem em 6/6 | **falha: 5/6** |
-| checkpoints não inferiores | passa: 5 = 5 |
-| PLAN future-only não inferior | **falha: 5 < 6** |
-| gates não inferiores | passa: 5 = 5 |
-| reconciliação não inferior | passa: 4 = 4 |
-| válidas não inferiores | **falha: 2 < 3** |
-| REPORT/state/final não inferiores | passa: 6 = 6 em todos |
+## Integridade da evidência local
 
-Os próprios diagnósticos não afetados por esse falso negativo ainda registram
-perdas de ordem e PLAN future-only em J. Contudo, o protocolo proíbe corrigir e
-reaproveitar o lote; portanto, a decisão formal não é “J causalmente rejeitada”,
-mas **experimento inválido e J não autorizada**.
-
-## Estado final e gate
+O workbench é ignorado pelo Git, por isso os digests abaixo permitem identificar
+o pacote bruto que originou este handoff:
 
 ```text
-12/12 chamadas concluídas sem timeout
-→ defeito novo encontrado no scorer congelado
-→ lote integralmente inválido
-→ nenhum rescore/correção/reuso
-→ candidata J não aplicada nem commitada
-→ root permanece execute 788cfa214aff
-→ não executar end-to-end
-→ não medir compactação
-→ não ampliar amostra
+experiment JSON  2a5ff19294e4288160e17841ecc3b89ff7e33776b271ff1f481b6cfba1406fd0
+preflight        d20f503d85a6909f33e5ca8d01a0da53a187529f8208a5a7d912736664f13136
+run log          b12c3f6ec1dac3310f8619f3d58c79b8ff739a10ec5ea99b7cd779e4ec7734c3
+audit            ec32ec9b780b7a03545916f0e941584292998b869e300797266ae265f7ebdcf7
+candidate diff   e3ad7ca88db2d51a7aa9f9711eecf925ee4b37874197a72201ff7a6a7bace03e
+J prior audit    49c1c54a2187f6543053d570ffeebd4bbc6486fd6fe458e22eef82bb456ab2a3
+J prior run log  24f2315965d81dab49fac945e3dac03ee80d617302a4db48c56e9d0bcd714f82
 ```
 
-Qualquer experimento futuro precisa começar com novas identidades e um scorer
-novo que trate `Unresolved:` como contexto de pendência sem inferir confirmação
-a partir de `observed`. Esta tarefa não implementa essa hipótese seguinte.
+Os prompts, stdout, stderr, metas, scores e workspaces das 12 runs permanecem
+preservados localmente em:
+
+```text
+evaluation/track-compactness/sessions/
+  task-manager-task-record-validation-order-ab-v1/
+```
+
+Nenhum artefato bruto ou scorer foi modificado depois da primeira chamada.
+Nenhum score antigo de v2 ou J foi reescrito.
+
+## Decisão e gate
+
+```text
+J: formalmente inválida para schema/VALID
+→ rejeitada operacionalmente por ordem 5/6 e PLAN future-only 5/6
+→ não repetir J
+
+K: hard-gates de task record 6/6
+→ checkpoints 1/6 < A 2/6
+→ reconciliação 1/6 < A 2/6
+→ rejeitar K e manter baseline execute 788cfa214aff...
+```
+
+Não houve end-to-end, medição de compactação, ampliação de amostra, alteração
+normativa ou implementação da hipótese seguinte. Qualquer próximo experimento
+exige uma nova hipótese isolada do agente master; não acumular nova prosa ou
+reaplicar J/K sem decisão explícita.
