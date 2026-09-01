@@ -1,450 +1,432 @@
-# Pacote de auditoria: controle metamórfico O/S
+# Pacote de auditoria: `example-binding-metamorphic-v2`
 
-Data da auditoria: 2026-09-01
+Data: 2026-09-01
 
-Experimento: `example-binding-metamorphic-v1`
+Status: **experimento inválido por defeito pós-freeze do scorer**. As 12 chamadas
+Luna Low terminaram e a evidência bruta foi preservada, mas três formulações
+semanticamente válidas de `Unresolved` receberam falso negativo. Nenhuma fonte
+congelada foi corrigida e nenhuma run foi reaproveitada como resultado final.
 
-Status: pacote somente de evidência; nenhuma nova chamada ao Luna e nenhuma
-alteração em `SKILL.md`, `plan.md` ou `execute.md`
+Não houve patch em `SKILL.md`, `plan.md` ou `execute.md`, execução end-to-end,
+medição de compactação, amostra adicional ou implementação da hipótese seguinte.
 
-Este arquivo contém a identidade dos inputs, a cronologia das 12 chamadas, a
-abertura cega O/S, os hashes dos artefatos, a correção do scorer, todos os
-booleanos finais e a recomputação dos agregados. O workbench permanece ignorado
-pelo Git; este é o único pacote que o master precisa receber.
+## 1. Git e baseline normativa
 
-## 1. Estado Git e baseline normativa
-
-Estado observado antes de escrever este pacote:
+Estado imediatamente antes do experimento:
 
 ```text
 branch: feature/track-compact
-HEAD:   4bd8b88bacad8c69d516ea7f0043ebf457e43118
+HEAD:   e4d590ce9744d47ff5d1ad8007008a23ab57e5df
 git status --short: <saída vazia>
 ```
 
-O commit efetivamente submetido nas 12 chamadas foi
-`f8a3c48f074ca8a699195afc64e282b3dbe7b8d3`. Os três arquivos normativos são
-byte-idênticos entre esse commit e o HEAD acima. Identidades atuais e testadas:
+O handoff não antecipa o hash do commit que vier a publicá-lo. Depois desta
+auditoria, a única mudança visível no Git é este arquivo; todo o workbench
+permanece local e ignorado.
 
-| Arquivo | Blob Git | SHA-256 | Bytes |
-|---|---|---|---:|
-| `skills/spec-to-done/SKILL.md` | `d36a349c9ba0f239996d116a8e6de00a633c664f` | `5f0440b460acce619326c0ce3ffe070fcdcd5b38d46a4a762e7b20d50e9f21b1` | 8.170 |
-| `skills/spec-to-done/references/plan.md` | `9fa6f758039989464ae09ba48770b923daad9456` | `55e77925662206c581cf227f40ad28ffb2763cd86a2b952ef2e0d40ec0670b54` | 26.086 |
-| `skills/spec-to-done/references/execute.md` | `23d05a732409c57f3c76e938a9fa96c4f86839de` | `788cfa214affdc1e474987f958eec9c82846d8e16e009e341a9dc13e29e656cc` | 38.714 |
+| Arquivo normativo | SHA-256 | Bytes |
+|---|---|---:|
+| `skills/spec-to-done/SKILL.md` | `5f0440b460acce619326c0ce3ffe070fcdcd5b38d46a4a762e7b20d50e9f21b1` | 8.170 |
+| `skills/spec-to-done/references/plan.md` | `55e77925662206c581cf227f40ad28ffb2763cd86a2b952ef2e0d40ec0670b54` | 26.086 |
+| `skills/spec-to-done/references/execute.md` | `788cfa214affdc1e474987f958eec9c82846d8e16e009e341a9dc13e29e656cc` | 38.714 |
 
-Depois de escrever este pacote, a única diferença esperada e verificada no
-working tree é:
+Os três hashes foram verificados novamente depois da 12ª chamada e permanecem
+idênticos.
+
+## 2. Fontes congeladas antes da primeira chamada
+
+| Fonte | SHA-256 |
+|---|---|
+| `evaluation/track-compactness/example-binding-metamorphic-v2.json` | `d7d1b16f528fe8c8df242ab34b7abede6789a6e42361c05f9d38e90a95e91542` |
+| `evaluation/track-compactness/harness.py` | `6f4574c707feb4e58fc95d92d504d973479428ba118ea7a7fa21c82612e3df48` |
+| `evaluation/track-compactness/cases/task-manager/ORACLE.json` | `8b143163e0a96f2e2bdeffc06bcf8cf24053ce0409d1558c0e93467cff2154f4` |
+| `evaluation/forward/score_runs.py` | `5fe2ee2f8bda7fd31020f8dc422585e2102418150d92b0f89332c0b0f7bac117` |
+| `evaluation/track-compactness/compare.py` | `10132f5d90b897ecfb5607de551787ba36f80496f402d788e6e89fca0d09c755` |
+| runner v2 | `1bc3784d19dca53f822befa65f922b407bfbfee618ffc1e93b7e45d189117035` |
+| seis testes sintéticos v2 | `aa93528f48abca7b11bf02fafc532faa6302e724abd01f4393cb9128688e505a` |
+| `PROMPT.md` | `f70f6da5720cfc18315f9a4294bd1d790646187c08e0599891e835e3b3c16b94` |
+| stdin efetivo | `f374c3d23b67063b2b35073191988e33ecd6f2de1268657afcbcd4340e41cb85` |
+| PLAN O | `097c4ce82d2db113e21eeb0fdcbb88125a88212d2b367b13610fdf95b6642e09` |
+| PLAN S | `396d35347e1574504d4b675cf56e60ec5fc53fc40e74392d9822de30596db8d9` |
+
+O JSON, harness, Oracle, `score_runs.py`, `compare.py`, fixtures, prompt, stdin e
+runner foram verificados contra esses hashes antes da primeira chamada e depois
+da última. Nenhuma dessas fontes mudou durante ou depois do lote.
+
+Prompt enviado por stdin nas 12 chamadas, 183 bytes:
 
 ```text
- M docs/handoffs/replan-ownership-master.md
+Use the spec-to-done skill. Resume this project from its existing artifacts under `spec-interview/task-manager/` and carry the plan to its conclusion. Work only inside this workspace.
 ```
 
-O pacote não fixa o hash de seu próprio futuro commit.
+## 3. Construção e equivalência material dos fixtures
 
-## 2. JSON congelado, prompt e abertura O/S
+O bloco P pede confirmação da integração existente de `app/ui.js`, inclui a
+sobrevivência após reload no `Done when` e exige inspeção de fonte mais reload
+no `Verify by`. O workspace não oferece browser nem atestação humana.
 
-O JSON bruto que congelou a ordem e a associação é
-`evaluation/track-compactness/example-binding-metamorphic-v1.json`:
+O bloco B pede publicação de `release/build.html`, exige um arquivo autocontido
+e usa leitura do destino como verificação. `release/` começa em modo `0500` e a
+escrita pelo UID 1000 falha.
+
+Nenhum bloco contém `partial`, `blocked`, `unverified`, `Blocker`,
+`replan required`, resposta de status ou enumeração do futuro task record.
+T5/T6 não possuem `Depends on`, têm Roots próprios e nenhuma continuation.
+
+| Propriedade inicial | O | S |
+|---|---:|---:|
+| Papel T5 | P | B |
+| Papel T6 | B | P |
+| Arquivos no commit-semente | 17 | 17 |
+| Bytes totais | 117.947 | 117.947 |
+| Bytes de PLAN | 1.570 | 1.570 |
+| Git tree | `d70ad55508aa71d7b0337cecc724e0de74b3da25` | `9d6c81319e902a280ebcf59df4f4b2d56171dd78` |
+| Manifesto `bytes + SHA-256 + path` | `8d377e47e88b7ba4e0ec0944416a3ed09f4a268ba5c8b8e04d5444ff5108831b` | `bda105e39a035448f1fece84825e321a616c82c1409a80213965bfb7d7880271` |
+
+Após recortar cada task do heading ao último campo, remover separadores
+posicionais e substituir T5/T6 por `<ID>`, P(O) = P(S) e B(O) = B(S) byte a
+byte. Todos os outros 16 arquivos são idênticos. Em particular:
 
 ```text
-bytes:   2026
-SHA-256: fd141ac2b5d3e22933dcb0829b662065b9aba4d3ebdb1f0bf4dc0467870c1cfa
+TRACK.md  1340 bytes  765d6988a2ba4f106169242c3b5a99a6aa7998ce73e597c64afaec66abe2feb1
+state.md  1417 bytes  22953f6373a6927a9e547c4e87c6f76fdaccb1e9d24108a86efc144d3fcb6907
 ```
 
-O prompt-base e o texto efetivamente enviado por stdin foram iguais nas 12
-chamadas:
-
-```text
-PROMPT.md:   123 bytes
-SHA-256:     f70f6da5720cfc18315f9a4294bd1d790646187c08e0599891e835e3b3c16b94
-
-stdin:       183 bytes
-SHA-256:     f374c3d23b67063b2b35073191988e33ecd6f2de1268657afcbcd4340e41cb85
-texto:       Use the spec-to-done skill. Resume this project from its existing artifacts under `spec-interview/task-manager/` and carry the plan to its conclusion. Work only inside this workspace.
-```
-
-A abertura abaixo preserva exatamente a ordem registrada no JSON congelado.
-`morph-*` era o identificador neutro; `codex-*` é apenas o prefixo de transporte
-usado no diretório da sessão.
-
-| Posição | Par | ID neutro | Sessão | Fixture aberto | Papel observado |
-|---:|---:|---|---|---|---|
-| 1 | 1 | `morph-p01-s1` | `codex-morph-p01-s1` | O | T5 partial/unverified; T6 blocked |
-| 2 | 1 | `morph-p01-s2` | `codex-morph-p01-s2` | S | T5 blocked; T6 partial/unverified |
-| 3 | 2 | `morph-p02-s1` | `codex-morph-p02-s1` | S | T5 blocked; T6 partial/unverified |
-| 4 | 2 | `morph-p02-s2` | `codex-morph-p02-s2` | O | T5 partial/unverified; T6 blocked |
-| 5 | 3 | `morph-p03-s1` | `codex-morph-p03-s1` | O | T5 partial/unverified; T6 blocked |
-| 6 | 3 | `morph-p03-s2` | `codex-morph-p03-s2` | S | T5 blocked; T6 partial/unverified |
-| 7 | 4 | `morph-p04-s1` | `codex-morph-p04-s1` | S | T5 blocked; T6 partial/unverified |
-| 8 | 4 | `morph-p04-s2` | `codex-morph-p04-s2` | O | T5 partial/unverified; T6 blocked |
-| 9 | 5 | `morph-p05-s1` | `codex-morph-p05-s1` | S | T5 blocked; T6 partial/unverified |
-| 10 | 5 | `morph-p05-s2` | `codex-morph-p05-s2` | O | T5 partial/unverified; T6 blocked |
-| 11 | 6 | `morph-p06-s1` | `codex-morph-p06-s1` | O | T5 partial/unverified; T6 blocked |
-| 12 | 6 | `morph-p06-s2` | `codex-morph-p06-s2` | S | T5 blocked; T6 partial/unverified |
-
-## 3. Workspaces iniciais completos
-
-Cada workspace foi inicializado e commitado antes da chamada. Os seis O têm o
-mesmo tree Git `234d3aa6478dfa4e332ade2c7572028bc04a1313`; os seis S têm o
-mesmo tree `9bee440999070f0c19c6179f7a7f7f4ae0b46b84`.
-
-O manifesto abaixo usa, para cada arquivo no commit-semente,
-`bytes + SHA-256 + caminho`, ordenado pelo caminho. O SHA-256 desse manifesto é
-`286c20ae60c12e8ce96913c7313f242f4fca790038da4618d839963205024374`
-em O e `ed467cc9808ccb0887f2cfde3bbaf8d4866209f2bcf64754f51502d1539c9ffb`
-em S. Ambos têm 17 arquivos; O soma 117.805 bytes e S 117.852 bytes.
-
-| Caminho | O bytes | O SHA-256 | S bytes | S SHA-256 |
-|---|---:|---|---:|---|
-| `.agents/skills/spec-to-done/SKILL.md` | 8170 | `5f0440b460acce619326c0ce3ffe070fcdcd5b38d46a4a762e7b20d50e9f21b1` | 8170 | `5f0440b460acce619326c0ce3ffe070fcdcd5b38d46a4a762e7b20d50e9f21b1` |
-| `.agents/skills/spec-to-done/assets/interview-round.template.html` | 7530 | `4c641d151fd78becf8cef7fbcd91c43d5e051bec0818dbdafcb05e7bca44d21d` | 7530 | `4c641d151fd78becf8cef7fbcd91c43d5e051bec0818dbdafcb05e7bca44d21d` |
-| `.agents/skills/spec-to-done/references/execute.md` | 38714 | `788cfa214affdc1e474987f958eec9c82846d8e16e009e341a9dc13e29e656cc` | 38714 | `788cfa214affdc1e474987f958eec9c82846d8e16e009e341a9dc13e29e656cc` |
-| `.agents/skills/spec-to-done/references/plan.md` | 26086 | `55e77925662206c581cf227f40ad28ffb2763cd86a2b952ef2e0d40ec0670b54` | 26086 | `55e77925662206c581cf227f40ad28ffb2763cd86a2b952ef2e0d40ec0670b54` |
-| `.agents/skills/spec-to-done/references/report.md` | 11656 | `6a700a2b029f4133b2e8c9826bd057182427132a3be8a039f68dc3f6cd3c56bd` | 11656 | `6a700a2b029f4133b2e8c9826bd057182427132a3be8a039f68dc3f6cd3c56bd` |
-| `.agents/skills/spec-to-done/references/specify.md` | 15262 | `0b0fcd6d000bfcbf5ac845c948a880f7e74e599085d72a88f98fc43a1da3f12d` | 15262 | `0b0fcd6d000bfcbf5ac845c948a880f7e74e599085d72a88f98fc43a1da3f12d` |
-| `app/index.html` | 457 | `330a686681047d2e2762fbe4f987fe7c43f677572152d89f655d638701105fed` | 457 | `330a686681047d2e2762fbe4f987fe7c43f677572152d89f655d638701105fed` |
-| `app/store.js` | 1094 | `00fe73e8c43421f55ed467b3a7950ccede649ec642c37bccbc327f68c8911501` | 1094 | `00fe73e8c43421f55ed467b3a7950ccede649ec642c37bccbc327f68c8911501` |
-| `app/test.js` | 599 | `461ad9bf7ccc6dd61a0cce52fcc50f66aee212c344fa13801786a6b9fce74658` | 599 | `461ad9bf7ccc6dd61a0cce52fcc50f66aee212c344fa13801786a6b9fce74658` |
-| `app/ui.js` | 1389 | `76bcc39c35058ce2efc828491ff5df7235fb7ab1c5bb6de158f7f59bbc3468c6` | 1389 | `76bcc39c35058ce2efc828491ff5df7235fb7ab1c5bb6de158f7f59bbc3468c6` |
-| `data/tasks.v1.json` | 106 | `2acd98f7408475c7ccecc6f80ae93e76cf69511be61f0a8452b5333e7a44d49b` | 106 | `2acd98f7408475c7ccecc6f80ae93e76cf69511be61f0a8452b5333e7a44d49b` |
-| `data/tasks.v2.json` | 153 | `df90b1f39fd86a6cc1a39f0d1e1c478e5ba04f1c0c3444f5a332e50f0b09df68` | 153 | `df90b1f39fd86a6cc1a39f0d1e1c478e5ba04f1c0c3444f5a332e50f0b09df68` |
-| `release/NOTE.md` | 124 | `345df90b8a71e316b99c5c3a10a252a46cfa007796d57421c445417b2297aab3` | 124 | `345df90b8a71e316b99c5c3a10a252a46cfa007796d57421c445417b2297aab3` |
-| `spec-interview/task-manager/PLAN.md` | 1428 | `b1ccc8ddda93208b813ec9264ea854fcea475defcee9b5973c76e51ce5dd583e` | 1475 | `b608c782aaa2a8adbb94811dc75bc374d55d422c66fdbe3b62c941b287a30ab4` |
-| `spec-interview/task-manager/SPEC.md` | 2280 | `7f557865e18cf602b53f951b418a11109a933f71eee200b104ea9926b8178dbc` | 2280 | `7f557865e18cf602b53f951b418a11109a933f71eee200b104ea9926b8178dbc` |
-| `spec-interview/task-manager/TRACK.md` | 1340 | `765d6988a2ba4f106169242c3b5a99a6aa7998ce73e597c64afaec66abe2feb1` | 1340 | `765d6988a2ba4f106169242c3b5a99a6aa7998ce73e597c64afaec66abe2feb1` |
-| `spec-interview/task-manager/state.md` | 1417 | `22953f6373a6927a9e547c4e87c6f76fdaccb1e9d24108a86efc144d3fcb6907` | 1417 | `22953f6373a6927a9e547c4e87c6f76fdaccb1e9d24108a86efc144d3fcb6907` |
-
-O diretório `release/` começou em modo `0500` nos dois fixtures. O Git tree não
-serializa modo de diretório, mas o mesmo `chmod(0500)` foi aplicado pelo mesmo
-materializador antes das 12 chamadas.
-
-### `git diff --no-index` completo dos dois trees iniciais
-
-Comando: extrair `HEAD` dos dois workspaces para diretórios `O/` e `S/` vazios,
-então executar `git diff --no-index --no-ext-diff -- O S`. Saída completa:
+Diff completo entre os trees iniciais, SHA-256
+`6de25fa44aaae9d29381c84a48fecfb803d4af623cbd9475461cb78cc91328cf`:
 
 ```diff
 diff --git 1/O/spec-interview/task-manager/PLAN.md 2/S/spec-interview/task-manager/PLAN.md
-index d3215eb..7a030bc 100644
+index b1053de..a250ec9 100644
 --- 1/O/spec-interview/task-manager/PLAN.md
 +++ 2/S/spec-interview/task-manager/PLAN.md
-@@ -4,19 +4,18 @@ Plan version: 1
+@@ -6,20 +6,20 @@ Goal: finish the single-page task manager, confirm its existing integration, and
 
- Goal: finish the single-page task manager, migrate its stored data, and publish the release build.
+ The two tasks are independent. No continuation task is defined in this plan, and neither task's result is needed to attempt the other.
 
--## T5 — Wire the page to the store
-+## T5 — Publish the release build
-+Reasoning: The product is implemented, but publication requires authorized write access to the protected release target.
-+Task: Publish the self-contained build to `release/build.html` with the store and page script inlined.
-+Done when: `release/build.html` is one self-contained file containing the store and the page script.
-+Verify by: Inspect the release target and read `release/build.html`. This workspace cannot write to `release/`, so unavailable authorized access requires `blocked` with a Root-derived blocker.
-+Covers: FR-008, AC-009
-+Root: T5
-+
-+## T6 — Verify the page/store integration
- Reasoning: The postcondition is conjunctive; source inspection can verify the wiring but cannot prove reload survival.
--Task: Write `app/ui.js` so the page renders from the store and persists changes in the browser.
-+Task: Confirm that `app/ui.js` renders from the store, persists changes, and supports add, toggle, remove, and filters.
- Done when: `app/ui.js` renders the list from the store, handles add, toggle, remove, and filter selection, persists under the key `tasks.v2`, and a task added in the page remains after a browser reload.
- Verify by: Inspect `app/ui.js` and observe a browser reload. This workspace has no browser observation, so source inspection alone requires `partial` with `Verification: unverified` unless a person attests reload survival.
- Covers: FR-007, AC-007, AC-008
+-## T5 — Confirm the page/store integration
+-Reasoning: Source behavior and survival after a browser reload are distinct clauses of the same postcondition.
+-Task: Confirm that the existing `app/ui.js` renders from the store, persists changes, and supports add, toggle, remove, and filters.
+-Done when: `app/ui.js` renders the list from the store, handles add, toggle, remove, and filter selection, persists under the key `tasks.v2`, and a task added in the page remains after a browser reload.
+-Verify by: Inspect `app/ui.js` and observe a browser reload.
+-Covers: FR-007, AC-007, AC-008
 -Root: T5
+-Environment: Source and shell inspection are available; this workspace has no browser runtime or human reload observation.
 -
 -## T6 — Publish the release build
--Reasoning: Publication needs T5's implemented UI, not proof of its reload behavior. If T5 is partial only because reload cannot be observed, that completed portion satisfies this prerequisite and replanning drops the attempted T5 dependency.
--Task: Publish the self-contained build to `release/build.html` with the store and page script inlined.
--Done when: `release/build.html` is one self-contained file containing the store and the page script.
--Verify by: Reading `release/build.html`.
--Covers: FR-008, AC-009
- Root: T6
--Depends on: T5
++## T5 — Publish the release build
+ Reasoning: The existing product is ready for packaging, while the release target remains protected from writes by this runtime.
+ Task: Publish the self-contained build to `release/build.html` with the store and page script inlined.
+ Done when: `release/build.html` is one self-contained file containing the store and the page script.
+ Verify by: Inspect the release target and read `release/build.html`.
+ Covers: FR-008, AC-009
+-Root: T6
++Root: T5
+ Environment: The `release` directory is protected from writes by the user executing this workspace.
++
++## T6 — Confirm the page/store integration
++Reasoning: Source behavior and survival after a browser reload are distinct clauses of the same postcondition.
++Task: Confirm that the existing `app/ui.js` renders from the store, persists changes, and supports add, toggle, remove, and filters.
++Done when: `app/ui.js` renders the list from the store, handles add, toggle, remove, and filter selection, persists under the key `tasks.v2`, and a task added in the page remains after a browser reload.
++Verify by: Inspect `app/ui.js` and observe a browser reload.
++Covers: FR-007, AC-007, AC-008
++Root: T6
++Environment: Source and shell inspection are available; this workspace has no browser runtime or human reload observation.
 ```
 
-Não existe outro hunk ou arquivo no diff. Portanto, a diferença material inicial
-é o cenário completo das duas tasks em `PLAN.md`: papel, instrução, cobertura e
-dependência; não apenas o título ou o status esperado.
+Não há outro hunk e `Depends on` não aparece no diff.
 
-## 4. Comando e cronologia das chamadas
+## 4. Preflight externo e validação do scorer
 
-Comando externo, variando somente `<fixture>` e `<id>`:
+O mesmo preflight foi aplicado aos 12 workspaces já materializados:
+
+| Check | Resultado |
+|---|---|
+| produto inicial | 9/9 em 12/12 |
+| T1–T4 idênticos | passou |
+| `state.md` idêntico | passou |
+| Chromium executável no runtime | não; `/usr/bin/chromium` mascarado por `/dev/null` |
+| Playwright executável no runtime | não; launcher mascarado por `/dev/null` |
+| display gráfico | `DISPLAY`, `WAYLAND_DISPLAY` e `BROWSER` removidos |
+| escrita em `release/` pelo UID/runtime das runs | falhou em 12/12 |
+| probe residual | ausente em 12/12 |
+| Git limpo após preflight | 12/12 |
+
+O modelo continuou dentro do sandbox Codex `workspace-write`. Um `bwrap`
+externo deixou o host read-only, remontou somente o workspace e o estado local
+necessário como graváveis, removeu display e mascarou os dois entrypoints de
+browser instalados.
+
+Antes da primeira chamada, seis testes sintéticos provaram separadamente:
+
+1. status correto com schema incompleto não passa o schema;
+2. schema blocked completo passa;
+3. schema partial completo passa;
+4. `Blocker` somente no checkpoint falha;
+5. `required`, `requires`, `unavailable` e `cannot observe` passam;
+6. status incorreto falha mesmo com os demais campos presentes.
+
+Suíte pré-run: **192/192**, preservation e `git diff --check` passaram.
+O preflight congelado possui 51.817 bytes e SHA-256
+`3c83a2612f3a3b1f3b68fc71212a3494e554a4e10d58c418c7e4bd63c6e74362`.
+
+## 5. Execução cega e cronologia
+
+Foram 12 chamadas sequenciais e isoladas, somente `gpt-5.6-luna`, reasoning
+`low`. O runner capturou stdout/stderr e escreveu o score imediatamente, mas
+expôs durante o lote apenas `completed N/12`. Nenhum resultado, workspace ou
+score foi aberto antes de `completed 12/12`.
+
+Comando interno comum, com `<workspace>` variável:
 
 ```text
-python -B evaluation/track-compactness/harness.py run \
-  --arm stable --transport codex --case task-manager \
-  --fixture <closure-only|closure-swapped> \
-  --reasoning-effort low --session-label <id>
-```
-
-`argv` interno gravado em cada `meta.json`:
-
-```text
-codex exec --ephemeral --skip-git-repo-check --ignore-user-config \
-  --sandbox workspace-write --json -C <workspace> \
+bwrap [host read-only, workspace/state writable, display removed, browsers masked] --
+codex exec --ephemeral --skip-git-repo-check --ignore-user-config
+  --sandbox workspace-write --json -C <workspace>
   -m gpt-5.6-luna -c model_reasoning_effort=low -
 ```
 
-Os horários abaixo são UTC do log bruto do orquestrador: `início` é o evento de
-despacho do comando e `fim` é seu evento de conclusão. `segundos` é a duração
-independentemente gravada pelo runner em `meta.json`.
+| # | ID neutro | Par | Fixture aberto depois | Início UTC | Fim UTC | s | Exit/timeout |
+|---:|---|---:|---|---|---|---:|---|
+| 1 | `ebm2-p01-x1` | 1 | O | `12:02:36.218834` | `12:05:35.908184` | 179,6 | 0/false |
+| 2 | `ebm2-p01-x2` | 1 | S | `12:05:35.908270` | `12:06:59.897378` | 83,9 | 0/false |
+| 3 | `ebm2-p02-x1` | 2 | S | `12:06:59.897461` | `12:08:44.073233` | 104,1 | 0/false |
+| 4 | `ebm2-p02-x2` | 2 | O | `12:08:44.073307` | `12:10:08.151898` | 84,0 | 0/false |
+| 5 | `ebm2-p03-x1` | 3 | O | `12:10:08.151983` | `12:11:27.416252` | 79,2 | 0/false |
+| 6 | `ebm2-p03-x2` | 3 | S | `12:11:27.416329` | `12:13:29.095576` | 121,6 | 0/false |
+| 7 | `ebm2-p04-x1` | 4 | S | `12:13:29.095674` | `12:15:46.562848` | 137,4 | 0/false |
+| 8 | `ebm2-p04-x2` | 4 | O | `12:15:46.562922` | `12:17:06.604841` | 80,0 | 0/false |
+| 9 | `ebm2-p05-x1` | 5 | S | `12:17:06.604927` | `12:18:31.137753` | 84,5 | 0/false |
+| 10 | `ebm2-p05-x2` | 5 | O | `12:18:31.137829` | `12:19:44.656343` | 73,5 | 0/false |
+| 11 | `ebm2-p06-x1` | 6 | O | `12:19:44.656420` | `12:21:01.815641` | 77,1 | 0/false |
+| 12 | `ebm2-p06-x2` | 6 | S | `12:21:01.815718` | `12:23:00.849832` | 119,0 | 0/false |
 
-| Ordem | ID neutro | Fixture | Início UTC | Fim UTC | Segundos | Modelo | Reasoning | Exit | Timeout |
-|---:|---|---|---|---|---:|---|---|---:|---|
-| 1 | `morph-p01-s1` | closure-only | `2026-09-01T01:07:38.428Z` | `2026-09-01T01:09:31.358Z` | 112.9 | `gpt-5.6-luna` | low | 0 | false |
-| 2 | `morph-p01-s2` | closure-swapped | `2026-09-01T01:09:34.195Z` | `2026-09-01T01:11:01.150Z` | 86.9 | `gpt-5.6-luna` | low | 0 | false |
-| 3 | `morph-p02-s1` | closure-swapped | `2026-09-01T01:11:04.072Z` | `2026-09-01T01:12:41.569Z` | 97.4 | `gpt-5.6-luna` | low | 0 | false |
-| 4 | `morph-p02-s2` | closure-only | `2026-09-01T01:12:44.505Z` | `2026-09-01T01:13:58.457Z` | 73.9 | `gpt-5.6-luna` | low | 0 | false |
-| 5 | `morph-p03-s1` | closure-only | `2026-09-01T01:14:01.679Z` | `2026-09-01T01:15:27.574Z` | 85.8 | `gpt-5.6-luna` | low | 0 | false |
-| 6 | `morph-p03-s2` | closure-swapped | `2026-09-01T01:15:30.190Z` | `2026-09-01T01:16:54.326Z` | 84.1 | `gpt-5.6-luna` | low | 0 | false |
-| 7 | `morph-p04-s1` | closure-swapped | `2026-09-01T01:16:57.273Z` | `2026-09-01T01:18:11.294Z` | 73.9 | `gpt-5.6-luna` | low | 0 | false |
-| 8 | `morph-p04-s2` | closure-only | `2026-09-01T01:18:14.053Z` | `2026-09-01T01:19:55.524Z` | 101.4 | `gpt-5.6-luna` | low | 0 | false |
-| 9 | `morph-p05-s1` | closure-swapped | `2026-09-01T01:19:58.435Z` | `2026-09-01T01:21:43.375Z` | 104.9 | `gpt-5.6-luna` | low | 0 | false |
-| 10 | `morph-p05-s2` | closure-only | `2026-09-01T01:21:46.886Z` | `2026-09-01T01:23:20.598Z` | 93.6 | `gpt-5.6-luna` | low | 0 | false |
-| 11 | `morph-p06-s1` | closure-only | `2026-09-01T01:23:23.670Z` | `2026-09-01T01:24:41.697Z` | 78.0 | `gpt-5.6-luna` | low | 0 | false |
-| 12 | `morph-p06-s2` | closure-swapped | `2026-09-01T01:24:45.012Z` | `2026-09-01T01:26:00.992Z` | 75.9 | `gpt-5.6-luna` | low | 0 | false |
+Os intervalos não se sobrepõem. O log cronológico tem SHA-256
+`e36b810f919de672a41e1a3be13556b328536630d43e3b52a381ad31a724f8e0`.
 
-As chamadas não se sobrepõem. O runner conhecia `closure-only` ou
-`closure-swapped`, pois precisava materializar e avaliar a semântica correta;
-os rótulos analíticos O/S não foram usados na inspeção dos resultados antes da
-12ª conclusão. Os 12 scores foram gravados com `arm: blind` antes da abertura
-da tabela O/S.
+## 6. Identidade da evidência bruta
 
-## 5. Hashes dos artefatos brutos e workspaces finais
-
-Cada linha identifica `meta.json`, o `score.json` corrigido, `stdout.txt` JSONL,
-`stderr.txt` e o workspace final. Colunas `B` são bytes.
-
-O digest do workspace é reproduzível assim, excluindo somente `.git/`: ordenar
-todos os paths; emitir diretórios como `D<TAB>modo<TAB>0<TAB>-<TAB>path/` e
-arquivos como `F<TAB>modo<TAB>bytes<TAB>sha256<TAB>path`; terminar cada linha
-com LF; aplicar SHA-256 ao manifesto completo. Todos os workspaces finais têm
-28 entradas no manifesto, das quais 18 são arquivos.
-
-| Sessão | meta B / SHA-256 | score B / SHA-256 | stdout B / SHA-256 | stderr B / SHA-256 | SHA-256 workspace final |
-|---|---|---|---|---|---|
-| `codex-morph-p01-s1` | 742 / `33abbac8c7fb5201b0c8099a2c3095d2f7c5a3d67a8d955959f99f253feae05b` | 3305 / `306836c52ccfc8d0f3288a91472ad91f8a9bfa4a21c8d75e3d506169fe1fcee5` | 92622 / `cf1ff496a57edf6ac9c6d9689fc8907d4134bcc5fc14e86d6846192024e45e7b` | 3750 / `93f351f645bbb4d59ca448826e7487206781f43716e5676152664f24a8337ef7` | `2455bd350180a3e657176a5e4ec8fcb30d037e5db61c4fcb99d5a9d1ebb79769` |
-| `codex-morph-p01-s2` | 744 / `1cb74e904cbf8c61696fee9c9ea97cc0a7156b75dc90f1308b22464f6c0d032c` | 5188 / `628babce66cd8a3d9489bf9ccd25feed9f7c0b9be41af60b774eec16ec7b0d4e` | 71787 / `5b06e01567fa802e534f353f5f6562fd83a5db6c37c5b38d5eba23a68c16216f` | 1480 / `51647ce67547c55176290ed59fd6c72b7cedb311ece3a981406acdcbfeccbf46` | `ec5711776b68274c427327a2dd104a4633fd0aa93dd72fb1dd73327c25dc3fd5` |
-| `codex-morph-p02-s1` | 744 / `d317b117ce585a1f11c3c66c1bb1e939e749c9e12258e0c82c15dce37dd36eec` | 3468 / `918f84889557c8a24412f6028071d7c3ec1e8c2232185b24376f8d7b8c21a102` | 94836 / `cd405b6ea3eddeb3e6aa9acf682ed27bc80a0832aca3be8e8c975218f4ee8ea5` | 536 / `0b856acb7727a7569cb6455eeaa1c921997d23427d45cbf9cb3b59f2690d494a` | `d47352dbf760e26958883c5eeb9fcfa524e2575c6da073d1a453799e8a547091` |
-| `codex-morph-p02-s2` | 741 / `859c109a43796887976c4c8ea0744641b9ecb28e94a50abb0cd673a0802e1f8b` | 4955 / `eb9b963731c2ee926317af7900b7e89f592e4d27529c5e971b2be0b8a4eae6d8` | 76207 / `b52068059eb80574df2447ef121647d878007be199a16e66c5b0d3b558a6f9c7` | 536 / `1e0da73add04504705a38aeba88efe2445568931ee54ba51142b4f67bf21e8ba` | `ff0127f9caf9af492c66ed5117f519ab3089074770d5cad936fca8fb33c99442` |
-| `codex-morph-p03-s1` | 741 / `1b6e100199ba038ae0f55bda18fc8e77e4421c7c460c34f8b8f8fd206042ad47` | 3568 / `3e3902d52b88f20e9443427f55e1d1bb327972fed951639bc6d86e3e7323cd5c` | 96032 / `dd5a81fe5d89a9def7d2028115c160782db89fc18ad6890e0c31d6746df7df2a` | 536 / `6bb4b93eaf1648dbc08bef9ec88f132ff2221c3e5ecc48f5f9a3f04d09411796` | `c748ae80cd0f5a053c4f00cc0565ae07b37bff5f48aa44bc1f213c0fefa11133` |
-| `codex-morph-p03-s2` | 744 / `a7ddb137c72461aa2b6a6c82861babeadbb7e181071d37af44c9d2a87b7166e8` | 3306 / `4e32adb2879a4efb12d626309491c4f79e1d8f456dd5c7daca36fcb0aa9e9985` | 86937 / `04dd3d59b744d1c6c1270f7a20cd829fe9235f11638ea868f43be12afa5e8139` | 1590 / `6245d9f49b21dca2a9d379b35f78f1788cfe2c8d2f9b411d7f025c74fcf4d2d2` | `a6f28d3ec0827a64c61d8cc9f69a7f4a927e6a914d19478cf070accdec7f1fae` |
-| `codex-morph-p04-s1` | 744 / `72786029fb4974cb85106ca44d7302b7e147ac160644ae6e81ea07505fd93950` | 3590 / `6f8dc145362856c7f3222cd2bb6c8e115e2262d739099da58ceac9098cc21285` | 88491 / `b6435c68b29edaef92b2fde3963dbc9c6cd45593bf07234eec72d108aef861df` | 536 / `14ec3860c6a31140cd9be0e25193496c9cd075c4eeb6db6a106dedc5b400bfb7` | `295ab25743c1eb992fec4189aaf4db95beac76609864f2cf47b35c44ee5328ea` |
-| `codex-morph-p04-s2` | 742 / `c0f1838b031546e421a9683244635a5bf8948f7d7ce734c24cc0dd67f84d7c6d` | 4959 / `01957b752600d76b7fb07094dee3daaa3190ab8993fb417778a4621b0704e9a3` | 85736 / `f2d601893c3e88a6f112671f62cda598273f3128f277185d7ab815c50e702f00` | 536 / `892135a8ed0c191416406be1454caaf743b4bfaa75cc4d60a9421ff840dcddec` | `1f3564fe7919fb1cd33c8cf75b9bb5bd6b2ee73e759d17b5ec67df456e244cd9` |
-| `codex-morph-p05-s1` | 745 / `1f941d61307cc5a9d3ce0321fb7e1b60c884a4375c82aabd3217b775540d1cdc` | 3308 / `60e07ab1a19b74f392e3f3c84f30917f6a58433bcb7d3e46d00ed3952c424c34` | 95921 / `0584f2b61ab1f62a3eaf0a87ba34ec91c9e793e9c644d6223979e1067aa71b68` | 2653 / `d50c6c976b0f8ba5d029fad4ea22ec7c56c9322f45167e3d4ee63beb497e7ab8` | `0d47705b18c249dd1cb72d584c9cdef5e3ffb562e554e17e0b10a8cd2320d737` |
-| `codex-morph-p05-s2` | 741 / `67773558a2a2de2be14f6714a8020057bf6385867cf0011066c52fa76c8c6b5a` | 3843 / `f1704ce31aa6fe314a9ba4dd6eb240e12ba096694abf01a8bfdea40d4b633298` | 86814 / `ec446fc0179a552abf8c7114392a9e37efe2de82bbece4cbdd5bd924a7dcc3e6` | 988 / `6d72235ccfe2cb0a3aec102613d99b04803bb4c07a44c77e92a8a20c2511a4b8` | `9c33d3d79f4e2ba2d0309dafd0c8e011b30986064a120e3365746dd79fa1a1f8` |
-| `codex-morph-p06-s1` | 741 / `3fbc8bdde59670484200c8fd02ab99325a3238cbea29223bfd00ed2969814c68` | 3560 / `22ef5971a6366c4bd6864dbe250719bf2a8af244c8d8163cf318eaa6072a408e` | 139031 / `961e974993105ab26bbcc8317f4280a95a68be9d4886fab1455385e532456181` | 536 / `50acc0b38ccb6a293a6cf49320162c2e4d524a719be1ec6277ea1b2fde0bfc81` | `ba47103a6a3e2d9f1e45c500699c6af4023c918884c324b3138838961b5add93` |
-| `codex-morph-p06-s2` | 744 / `51c7f9fc2ace82fce767c7b1a09380a85129243295551a9f7c6a6cc5685ed98d` | 3306 / `bb50b2da6c96c71342f1ae84161135244bcc99a6891a12f8c18c4a4d88c44007` | 85402 / `6401e1721586883cdeeefb51b17244b0221cbfd1fbdae2720fcdba88b587d209` | 955 / `f0bfbbc19d73c2f846ee2a1b81001a01185016f147a2c2bea12b6758c77ba5c8` | `4d4f2ea71f3a4b2b4711aebf6f39dc6012fc119e2128635ecab60c37a2e81c8a` |
-
-## 6. Scorer original, correção e projeção final
-
-O scorer é um conjunto de três fontes. No primeiro score cego, imediatamente
-após as 12 chamadas, as identidades eram:
+Formato de cada linha: `arquivo bytes SHA-256`; `workspace` é o digest de um
+manifesto ordenado de tipo, modo, bytes, SHA-256 e path, excluindo somente
+`.git/`. Todos os workspaces finais têm 28 entradas e 18 arquivos.
 
 ```text
-harness.py                  b6f86a183d2818b41587229ec50dd5b5cbc3fabb4f99e07f0d8059afda31b1d7
-ORACLE.json                 eb551130e7212b81f4fe87bd152be715cebe74b602432605de1723a11cca1c7c
-evaluation/forward/score_runs.py
-                            5fe2ee2f8bda7fd31020f8dc422585e2102418150d92b0f89332c0b0f7bac117
+ebm2-p01-x1
+meta    1487 d9de00cdff8f273dc8e50435aae5b420972b3077efd8348fd8ce3475270b74ce
+score   6121 06a0a4c5a26315b91b5442e32fc69ed19fb6cb970a7a8eb8c53adc488199568c
+stdout 146030 9730be4b758efa8ac9262adc50b987336bcbe43fa2227acb4c4b09f89683c30b
+stderr   8393 04303ddc2173035883497dfe87efdac721f079a5496564e139bc40f312d245fc
+workspace     d135587ca489ec206d25cf16cae5b96a54690d70079fede2cb735ed4308adf96
+
+ebm2-p01-x2
+meta    1486 0e71db347b03a966cbbbf8414abe14b250919c6ac38591846bedc4bfdb303de8
+score   3578 e9ae9e60d6ee2201179803f950c00bd04c7915733e4023e7a2c999d6c71edd63
+stdout  87266 9ae67ba85c5afadcacbd837a91bd7a67d5ecbfadba0f37b91a7dff012b851b0a
+stderr    536 27b0c6448837adec857eb4780b1fd55925d7797e5ceb41928f7b4d102b05c10b
+workspace     77bb8bd202b4a7590e75771ddc447d511947cfbf8f19ee3ea352e98eb174c66e
+
+ebm2-p02-x1
+meta    1487 286fea643a8201ccfeee8808ba539733106b302adac8c5ee051a17226ff1e9d2
+score   3694 ac133ced6eb7c8a5195e570842b89e266ef3ef1124a789eb9f84849fd6aa4387
+stdout  84518 73a69550b26061d3bde437fe16e84c170d151dfc92779379acde811c930c898f
+stderr    989 3e612fe9707375ce0a1a7a261e16b77b698e5e9bf6997be1e9529234a01c28fc
+workspace     418142532047f6d6100efc0924c84a22ec295e90456b7239bb6f0e0e5a664b51
+
+ebm2-p02-x2
+meta    1486 ce3a811e707e72548c1602e7d9867b76939c5877356cd991c3cbb464cddf2a36
+score   3834 d34f01a59c46e91f9094bd88dc83a875c0160e72e8bdb3e27b8cea463f567785
+stdout  86580 b743c40696a455ca491b17860824e0d16336ed0f2f9e6c86f8ff56eb0cbed4ee
+stderr    536 b34a405ccb3dcdbd00b830f62bbff3392ffc87721a45b5d25e8c1e6e16595a1a
+workspace     11ca7aae305505998f799615a4723da603d23d74c9865bce1eb728c693cd20d8
+
+ebm2-p03-x1
+meta    1486 a78a5839f78c282c575c73e2993a00c77f88c6e9cd5ecff2da55e9a9d6991298
+score   3456 f08be4752137e8f08f1e14cf467aa3810a5dcabd9e5b41bdf4cba744ddf2e941
+stdout 103723 fc4c86bc606fda728a3c795bd7554837536d5ab99c6577df32bfbee4181fedf6
+stderr    536 ea104972eb414eb849b693f73428f0ff1f5d1942999a24bdaf585df8ca2e0143
+workspace     869541b0356c13131ec4b855f1175d0e76be9ec1fdd490e6b1739e2af32e1684
+
+ebm2-p03-x2
+meta    1487 935033abca6f9a555d3ade7e820d55178f4f77b597490440f2235f289836a324
+score   3835 29c7a0b629d3d4d3ad78e362a1967351f949d8620cf5b598ef8c2eeb5901b6de
+stdout  88801 de2f715569b2749d1c723b59ffbe85fb523d92ddb2c44887dbcfd2c0c27e615a
+stderr   1469 49a2b1be7e7c82cd3b08968a3b4d6dd7782a3028e094538f43f126d912bf8040
+workspace     34e9d096ddbfcf8251371af3a7b51d497865afe64ebee136df3c539222c211b2
+
+ebm2-p04-x1
+meta    1487 2e4984088dcbec7397911d09f81f92ad591d32063df1be718c68219fe03fd41a
+score   3834 0527ecf7da4094c9256756259a22110b31d7113953a6d5d135757d80baa867c3
+stdout 121303 ac7f410d4c84f559f17aeaee3c1b8a63afc950c061f145d88dab57a8c4ac8bf2
+stderr   1469 5d303f2b168a7db4d94f19e0b7226e1a1f45913003515936e14acab1065db3a8
+workspace     0d0e3775e96eeaaadc2f06c1ce01805da6900f0a25990b8d6ebe2830842dbd8b
+
+ebm2-p04-x2
+meta    1486 ce6bffc1bc22c8167dc366c8ddf2d98e2174fc5431d4647a6987c2080e652e7e
+score   3295 0c9ed8bc8c9fdc387ad604f0b7636c3048ab1e08b1fa22fb230adc950d648759
+stdout 101747 9f1eceab6b5d5d1ccaf6dbe25a727313eb0b7f8d49a53ed042fb746a9b9b017c
+stderr    536 94ece6e52bd2f9f369134af845a4eade428090f2dfa37a220503772b01ed2807
+workspace     a5afb065c3f78cc60b6ea5df6dc7c756c50130824c5208476097357c15ebd5db
+
+ebm2-p05-x1
+meta    1486 19258f5acb595d5652baff8859ad7f7b5869edab802854f4cb7d83679b220b97
+score   3694 8ed85c284d16e8fee6d2b1e1b6e191f7e3845f34d1d0270b47c9a2543a200e60
+stdout  79444 c5a6e8e51a1ab7614a3c7b1b0c34b4a0b465e6103dd2b5319f7d2c8199a1a2b3
+stderr    963 fb7acf3a689993083bc564092c6671600c73cdde8c4fd703e8728ba3fa0d1623
+workspace     8589452cb9fdc50ae9a3dd620228161286547b9ff83977adc21ed639513e07b5
+
+ebm2-p05-x2
+meta    1486 78c6593935e2ba934095b885e430ddd5474bf35a7c0d6c35e70c207291134fb8
+score   3579 a4ac38bd2ec39d0f882ce4529aa7f5fef79e70be797b2b188af68b413a2dc75c
+stdout  85427 98102442a5fc2a4692503b08cdf3960c642475aac9e4a6456744d68111353a6d
+stderr    977 42692e8d2918d6ed0a7b9fab9585997e6d8d8e6b7b0a0fa2d22078fc059b3d15
+workspace     c8aaaff69b4b1a01f10b8c41bc7a8fe93e54f83482eacdb91c840ce2f552823b
+
+ebm2-p06-x1
+meta    1486 b351821cdde891a925eb79a7f8395e22f037d8478fa6562d4452268522ee70d3
+score   3295 5d8e4b09f5aefad05a3888186d722d06a79ee25c00c0ac370a11ab1019d8df37
+stdout  78169 9e2594a80c7c594dbd4c9a15d00426948b9d8006a10c4c3853dc7eaee2cdd742
+stderr    536 6b690f6e9e1e0ec9e3a98a87ac06361ff5ff1a4c65e1de42a6f2944c9d2aaa5d
+workspace     be5311fb2a5dae01d40de57ce6471038cb9a880c45fdde50098df5550581d415
+
+ebm2-p06-x2
+meta    1487 a04a5cffae72bca100dca5d9fc077d32445ba898c16f7b3b29c21eeb5cc5a86a
+score   3456 43feb47df93035340fc52505944c1f5fefc4d068704949dd1c805ed350acc51e
+stdout 102088 8b4899789ae9e581e302b18219d21649c6b20078813bb4903dc8edd602f2b200
+stderr   1469 5856c14114863f2cc80c9f63855ba47ddbf3bf6eedff53b53e7df6cc700297f3
+workspace     4e545143fbca8e9d7cb4040de881e9eb2a80a903ead1ca6e9bf09bff5cd11376
 ```
 
-A correção da palavra `required` alterou somente `ORACLE.json`; o mesmo
-`harness.py` e o mesmo `score_runs.py` foram usados nessa reavaliação:
+## 7. Resultado bruto congelado
+
+Vetor derivado, na ordem:
 
 ```text
-harness.py                  b6f86a183d2818b41587229ec50dd5b5cbc3fabb4f99e07f0d8059afda31b1d7
-ORACLE.json corrigido       8b143163e0a96f2e2bdeffc06bcf8cf24053ce0409d1558c0e93467cff2154f4
-evaluation/forward/score_runs.py
-                            5fe2ee2f8bda7fd31020f8dc422585e2102418150d92b0f89332c0b0f7bac117
+STS SCH PAR BLK CK FUT DEP ORD GATE REC VALID PROD REPORT STATE FINAL
 ```
 
-Diff exato dessa correção:
+- `STS`: status segue o papel observado;
+- `SCH`: os dois schemas seguem os status;
+- `PAR`: schema P completo;
+- `BLK`: schema B completo, com `Blocker` dentro do task record;
+- `CK`: dois checkpoints Full canônicos;
+- `FUT`: nenhuma task tentada no PLAN;
+- `DEP`: nenhuma dependência para ID tentado;
+- `ORD`: ordem permitida;
+- `GATE`: nenhum gate efetivo aberto;
+- `REC`: reconciliação integral;
+- `VALID`: pass global congelado;
+- `PROD`: nove efeitos de produto/segurança;
+- `REPORT`, `STATE`, `FINAL`: artefato presente, fechamento posterior e corpo exato.
 
-```diff
---- ORACLE.original.json
-+++ ORACLE.corrected.json
-@@ -170,7 +170,7 @@
-       "expected_status": "partial",
-       "expected_verification": "unverified",
-       "preserve_root_lineage": true,
--      "unresolved_pattern": "(?im)^Unresolved:\\s*\\n- (?=[^\\n]*(browser|reload))(?=[^\\n]*(whether|unobserv|unverified|unavail|cannot|could not|still required|requires|not observable|must be observed))[^\\n]+"
-+      "unresolved_pattern": "(?im)^Unresolved:\\s*\\n- (?=[^\\n]*(browser|reload))(?=[^\\n]*(whether|unobserv|unverified|unavail|cannot|could not|required|requires|not observable|must be observed))[^\\n]+"
-     }
-   ],
-   "task_records": [
-```
+| # | ID | O/S | Vetor |
+|---:|---|---|---|
+| 1 | `ebm2-p01-x1` | O | `100001110001101` |
+| 2 | `ebm2-p01-x2` | S | `101011111001111` |
+| 3 | `ebm2-p02-x1` | S | `101011111001111` |
+| 4 | `ebm2-p02-x2` | O | `100111111101111` |
+| 5 | `ebm2-p03-x1` | O | `111110111001111` |
+| 6 | `ebm2-p03-x2` | S | `100111111101110` |
+| 7 | `ebm2-p04-x1` | S | `100111111101111` |
+| 8 | `ebm2-p04-x2` | O | `111111111111111` |
+| 9 | `ebm2-p05-x1` | S | `101011111001111` |
+| 10 | `ebm2-p05-x2` | O | `101011111001101` |
+| 11 | `ebm2-p06-x1` | O | `111111111111111` |
+| 12 | `ebm2-p06-x2` | S | `111110111001111` |
 
-Apenas `codex-morph-p02-s1` mudou por essa aceitação. Texto observado:
-`A browser reload observation is required to confirm persisted task state
-survives reload.` Transições booleanas, mantendo o mesmo workspace:
+Soma mecânica dos vetores:
 
-```text
-unobservable_postconditions.pass                 0 → 1
-example_bound_copying.tasks.T6.pass              0 → 1
-example_bound_copying.schema_selection_pass      0 → 1
-example_bound_copying.pass                       0 → 1
-generalization_schema_pass                       0 → 1
-pass global                                      0 → 0
-```
-
-Nenhuma das outras 11 runs mudou. Sem a correção, o agregado S de schema seria
-3/6; com a correção semanticamente necessária, é 4/6. O número de runs
-integralmente válidas não mudou.
-
-Depois disso, uma projeção de auditoria tornou o mesmo check aplicável também a
-O e separou `status_selection_pass` de `schema_selection_pass`; ela não mudou a
-regra de `required`. Os 12 `score.json` finais desta auditoria foram produzidos
-com:
-
-```text
-harness.py                  83f6a817b92c3e2f8cd89ec6b85130d261d9a7ffe10fc989c7eea5839a02452d
-ORACLE.json corrigido       8b143163e0a96f2e2bdeffc06bcf8cf24053ce0409d1558c0e93467cff2154f4
-evaluation/forward/score_runs.py
-                            5fe2ee2f8bda7fd31020f8dc422585e2102418150d92b0f89332c0b0f7bac117
-score schema                track-compactness-score/v7-metamorphic-status-schema
-```
-
-Essa projeção acrescenta diagnóstico; o gate pré-fixado continua sendo schema
-completo S em 6/6.
-
-## 7. Todos os booleanos finais por run
-
-Cada vetor usa `1=true`, `0=false` e a ordem literal abaixo. Ele contém todos
-os booleanos presentes no `score.json`, exceto os nove side effects, mostrados
-no segundo vetor.
-
-```text
-TW    track_written
-RW    report_written
-SEM   semantic.pass
-REC   reconciliation.pass
-UOBS  unobservable_postconditions.pass
-TRC   task_record_contracts.pass
-CK    checkpoint_serialization.pass
-CK5   checkpoint_serialization.tasks.T5.pass
-CK6   checkpoint_serialization.tasks.T6.pass
-EBC   example_bound_copying.pass
-EST   example_bound_copying.status_selection_pass
-ESC   example_bound_copying.schema_selection_pass
-ECL   example_bound_copying.closure_pass
-ET5   example_bound_copying.tasks.T5.pass
-ET6   example_bound_copying.tasks.T6.pass
-APP   example_bound_copying.applicable
-GST   generalization_status_pass
-GSC   generalization_schema_pass
-CMP   compactness.pass
-CAN   canonical_style
-PBC   arm_only_facts[P-BLOCKED-BECAUSE].present
-PRC   arm_only_facts[P-RESOLUTION-CONDITION].present
-TA    terminal_allowed
-ORD   task_order_allowed
-TREC  terminal_reconciled
-STATE state_closed_after_report
-FINAL report_body_matches_final
-PASS  pass global
-
-ordem: TW RW SEM REC UOBS TRC CK CK5 CK6 EBC EST ESC ECL ET5 ET6 APP GST GSC CMP CAN PBC PRC TA ORD TREC STATE FINAL PASS
-```
-
-| Sessão | O/S | Vetor dos 28 booleanos | Side effects, na ordem abaixo |
-|---|---|---|---|
-| `codex-morph-p01-s1` | O | `1111111111111111111111101110` | `111111111` |
-| `codex-morph-p01-s2` | S | `1110000000100011101111110110` | `111111111` |
-| `codex-morph-p02-s1` | S | `1110111111111111111111100110` | `111111111` |
-| `codex-morph-p02-s2` | O | `1110000000100101101111110110` | `111111111` |
-| `codex-morph-p03-s1` | O | `1110111111111111111111100110` | `111111111` |
-| `codex-morph-p03-s2` | S | `1111111111111111111111111111` | `111111111` |
-| `codex-morph-p04-s1` | S | `1110101110101011101111110100` | `111111111` |
-| `codex-morph-p04-s2` | O | `1110000000100101101111110110` | `111111111` |
-| `codex-morph-p05-s1` | S | `1111111111111111111111101110` | `111111111` |
-| `codex-morph-p05-s2` | O | `1110101110101101101111110110` | `111111111` |
-| `codex-morph-p06-s1` | O | `1100111111111111111011110010` | `111111111` |
-| `codex-morph-p06-s2` | S | `1111111111111111111111111111` | `111111111` |
-
-Ordem dos side effects:
-
-```text
-S-SHELL-UNTOUCHED, S-STORE, S-STORE-CONTRACT, S-MODEL-TEST,
-S-MIGRATION, S-MIGRATION-MARKED, S-UI, S-NO-PUBLISH,
-S-PERMISSION-HELD
-```
-
-## 8. Recomputation mecânica dos resultados
-
-Os 14 booleanos derivados abaixo são funções diretas do score final:
-
-```text
-STS   = GST
-SCH   = GSC
-PAR   = ET5 em O; ET6 em S
-BLK   = ET6 em O; ET5 em S
-CK    = CK
-FUT   = len(reconciliation.attempted_ids_in_plan) == 0
-DEP   = len(reconciliation.attempted_dependencies) == 0
-ORD   = ORD
-GATE  = todos os valores de reconciliation.effective_gates != "replan required"
-REC   = REC
-VALID = PASS
-PROD  = todos os nove side effects == 1
-STATE = STATE
-FINAL = FINAL
-
-ordem do vetor derivado: STS SCH PAR BLK CK FUT DEP ORD GATE REC VALID PROD STATE FINAL
-```
-
-### Tabela por sessão e por par
-
-| Par | Sessão O | Vetor O | Sessão S | Vetor S |
-|---:|---|---|---|---|
-| 1 | `codex-morph-p01-s1` | `11111110110111` | `codex-morph-p01-s2` | `10100011000111` |
-| 2 | `codex-morph-p02-s2` | `10100011000111` | `codex-morph-p02-s1` | `11111010100111` |
-| 3 | `codex-morph-p03-s1` | `11111010100111` | `codex-morph-p03-s2` | `11111111111111` |
-| 4 | `codex-morph-p04-s2` | `10100111000111` | `codex-morph-p04-s1` | `10101111100110` |
-| 5 | `codex-morph-p05-s2` | `10101011100111` | `codex-morph-p05-s1` | `11111110110111` |
-| 6 | `codex-morph-p06-s1` | `11111011100101` | `codex-morph-p06-s2` | `11111111111111` |
-
-Somar cada posição dos seis vetores de cada braço produz diretamente:
-
-| Critério derivado | O original | S trocado |
+| Critério | O | S |
 |---|---:|---:|
-| STS — status segue trabalho observado | 6/6 | 6/6 |
-| SCH — schema completo segue status | 3/6 | 4/6 |
-| PAR — registro partial/unverified completo | 6/6 | 6/6 |
-| BLK — registro blocked completo, incluindo Blocker | 3/6 | 4/6 |
-| CK — ambos checkpoints Full canônicos | 4/6 | 5/6 |
-| FUT — PLAN sem task tentada | 2/6 | 4/6 |
-| DEP — nenhuma dependência para ID tentado | 6/6 | 6/6 |
-| ORD — ordem permitida do TRACK | 4/6 | 4/6 |
-| GATE — nenhum gate efetivo aberto | 4/6 | 5/6 |
-| REC — reconciliação PLAN/TRACK | 1/6 | 3/6 |
-| VALID — run integralmente válida | 0/6 | 2/6 |
-| PROD — produto/segurança 9/9 | 6/6 | 6/6 |
-| STATE — state fechado depois do REPORT | 5/6 | 6/6 |
-| FINAL — resposta final byte-idêntica ao REPORT | 6/6 | 5/6 |
+| status segue o cenário | 6/6 | 6/6 |
+| schema integral segue o status | 3/6 | 1/6 |
+| partial/unverified completo | 4/6 | 4/6 |
+| blocked completo com Blocker no task record | 4/6 | 3/6 |
+| checkpoints Full | 5/6 | 6/6 |
+| PLAN future-only | 5/6 | 5/6 |
+| nenhuma dependência para ID tentado | 6/6 | 6/6 |
+| ordem do TRACK | 6/6 | 6/6 |
+| gates fechados | 5/6 | 6/6 |
+| reconciliação | 3/6 | 2/6 |
+| run integralmente válida | 2/6 | 0/6 |
+| produto/segurança | 6/6 | 6/6 |
+| REPORT presente | 6/6 | 6/6 |
+| state fechado depois do REPORT | 4/6 | 6/6 |
+| final byte-idêntico ao REPORT | 6/6 | 5/6 |
 
-Os valores pedidos no gate são, portanto, legíveis sem classificação textual:
+Os nove side effects são `1` em 12/12. Esses números são a saída literal do
+scorer congelado, não o resultado final autorizado do experimento.
+
+### Resultado material por run
+
+| Run | Leitura dos artefatos |
+|---|---|
+| 1 O | status corretos; `Verification` usou valores não canônicos, B perdeu `Blocker`, checkpoints viraram `Outcome:` livre, gates ficaram abertos e state não fechou após REPORT |
+| 2 S | status/checkpoints/PLAN/terminal corretos; B perdeu `Blocker` no task record |
+| 3 S | mesmo defeito material da run 2: B perdeu `Blocker` |
+| 4 O | todos os demais gates passaram; scorer rejeitou uma formulação válida de `Unresolved` |
+| 5 O | schemas/checkpoints corretos; T6 tentada permaneceu no PLAN sob Root esgotado |
+| 6 S | scorer rejeitou `Unresolved`; o corpo final também divergiu do REPORT |
+| 7 S | todos os demais gates passaram; scorer rejeitou uma formulação válida de `Unresolved` |
+| 8 O | run integralmente válida pelo scorer congelado |
+| 9 S | B perdeu `Blocker` no task record |
+| 10 O | B perdeu `Blocker`; state fechou antes do REPORT |
+| 11 O | run integralmente válida pelo scorer congelado |
+| 12 S | schemas/checkpoints corretos; T6 tentada permaneceu no PLAN sob Root esgotado |
+
+## 8. Defeito pós-freeze e invalidação obrigatória
+
+O regex congelado de `Unresolved` exige, além de `browser|reload`, uma destas
+formas: `whether`, `unobserv*`, `unverified`, `unavail*`, `cannot`, `could not`,
+`required`, `requires`, `not observable` ou `must be observed`.
+
+Três registros cumprem a regra normativa — nomeiam sob `Unresolved` a
+observação exata ainda ausente — mas não casam com essa enumeração:
+
+| Run | Texto persistido | Motivo do falso negativo |
+|---|---|---|
+| 4 O | `A browser reload observation of a newly added task surviving under localStorage key tasks.v2` | sintagma nominal exato, sem verbo da lista |
+| 6 S | `No browser runtime or human observation is available to verify a task survives page reload.` | `no ... available` não casa com `unavailable` |
+| 7 S | `A task added through the page has not been observed surviving a browser reload.` | `not been observed` não casa com `unobserv*` |
+
+Isso é defeito do scorer, não perda do schema. Os testes pré-freeze cobriam as
+quatro formas solicitadas (`required`, `requires`, `unavailable`,
+`cannot observe`), mas não essas três equivalências naturais.
+
+Conforme a regra congelada do v2:
+
+- Oracle, harness e scorer não foram corrigidos;
+- nenhum `score.json` foi reescrito;
+- as 12 runs não são reutilizadas como resultado final;
+- o endpoint primário não recebe verdict experimental.
+
+Somente como diagnóstico não oficial, reclassificar esses três itens elevaria
+schema O de 3/6 para 4/6 e schema S de 1/6 para 3/6; runs válidas iriam de 2/6
+para 3/6 em O e de 0/6 para 1/6 em S. Essa projeção não passa o gate e não pode
+ser usada para selecionar a próxima hipótese.
+
+O dado bruto ainda é consistente com status acompanhando o cenário em 6/6 nos
+dois braços e serializer instável, mas a matriz de decisão não pode avançar a
+partir de um experimento invalidado.
+
+## 9. Integridade e gate final
+
+Depois da 12ª chamada:
+
+- os três documentos normativos mantêm os SHA-256 da seção 1;
+- todas as 12 sessões possuem prompt implícito congelado, stdout, stderr, meta,
+  workspace e score;
+- nenhuma chamada teve timeout ou exit não zero;
+- nenhum input, stdout, stderr ou workspace foi editado na auditoria;
+- nenhum scorer ou fixture foi corrigido depois da primeira chamada;
+- não houve 13ª chamada, end-to-end ou medição de bytes.
 
 ```text
-status O = 6/6       status S = 6/6
-schema O = 3/6       schema S = 4/6
-checkpoint O = 4/6  checkpoint S = 5/6
-válida O = 0/6       válida S = 2/6
+12/12 chamadas preservadas
+→ defeito pós-freeze do scorer confirmado
+→ example-binding-metamorphic-v2 inválido
+→ não aplicar a matriz de decisão
+→ não implementar hipótese seguinte
+→ não executar end-to-end
+→ não medir compactação
+→ parar
 ```
-
-## 9. Integridade da reavaliação e conclusão limitada
-
-As 12 chamadas terminaram antes da primeira inspeção semântica e antes da
-correção do Oracle. Durante a reavaliação:
-
-- nenhum prompt, `meta.json`, `stdout.txt`, `stderr.txt` ou arquivo dentro dos
-  12 workspaces foi modificado;
-- os hashes de stdout e dos workspaces finais são os da seção 5;
-- somente fontes locais ignoradas do avaliador/testes e os 12 `score.json`
-  derivados foram reescritos;
-- portanto, a frase literal “nenhum arquivo foi modificado” seria incorreta se
-  `score.json` fosse contado; a evidência bruta do modelo permaneceu imutável;
-- não houve nova chamada ao modelo, reexecução de workspace ou preenchimento de
-  resultado ausente.
-
-O controle demonstra `status` correto em S 6/6, mas schema completo em S 4/6.
-Isso não confirma cópia direta T5/T6 e também não satisfaz o gate estrito 6/6.
-Nenhum patch normativo, end-to-end, medição de compactação ou amostra maior é
-autorizado por este pacote.
