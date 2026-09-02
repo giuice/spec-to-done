@@ -17,6 +17,8 @@ __pycache__/
 !/docs/handoffs/reconciliation-locus-diagnostic.md
 !/docs/handoffs/powered-three-arm-master.md
 !/docs/handoffs/main-vs-current-master.md
+!/docs/handoffs/main-vs-current-high-master.md
+!/docs/handoffs/consolidado-dev-master.md
 /evaluation/
 /legacy/
 /preservation/
