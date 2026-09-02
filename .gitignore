@@ -13,6 +13,10 @@ __pycache__/
 !/docs/handoffs/
 /docs/handoffs/*
 !/docs/handoffs/replan-ownership-master.md
+!/docs/handoffs/checkpoint-field-check-master.md
+!/docs/handoffs/reconciliation-locus-diagnostic.md
+!/docs/handoffs/powered-three-arm-master.md
+!/docs/handoffs/main-vs-current-master.md
 /evaluation/
 /legacy/
 /preservation/
