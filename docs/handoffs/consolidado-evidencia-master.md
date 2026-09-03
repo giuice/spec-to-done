@@ -38,10 +38,27 @@ honestidade entre os braços não tem causa nesse texto.
 
 ## 1. O que o PR muda
 
-16 arquivos, 3006 inserções, 117 remoções, dos quais três normativos. O PR promete: PLAN tem
-um único escritor, EXECUTE é o único escritor de registros de tarefa e checkpoints em TRACK,
-`state.md` só fecha depois do REPORT persistido, e a mensagem final reproduz o corpo do
-relatório byte a byte.
+O diff final contém **7 arquivos**: os três normativos, dois READMEs, o `.gitignore` e este
+documento.
+
+```
+.gitignore
+README.md
+README.pt-BR.md
+docs/handoffs/consolidado-evidencia-master.md
+skills/spec-to-done/SKILL.md
+skills/spec-to-done/references/execute.md
+skills/spec-to-done/references/plan.md
+```
+
+Artefatos de trabalho que antes apareciam no diff — um patch, um relatório de validação local
+com hashes de um `HEAD` já superado, um log de testes e o `CLAUDE.md` — foram removidos do
+branch e não fazem parte da entrega. Qualquer contagem anterior de arquivos deste PR está
+obsoleta.
+
+O PR promete: PLAN tem um único escritor, EXECUTE é o único escritor de registros de tarefa e
+checkpoints em TRACK, `state.md` só fecha depois do REPORT persistido, e a mensagem final
+reproduz o corpo do relatório byte a byte.
 
 ## 2. Cadeia de evidência
 
