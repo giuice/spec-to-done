@@ -9,7 +9,11 @@ __pycache__/
 # Local development workbench. Preserve on disk; do not publish with the Skill.
 /.vscode/
 /AGENTS.md
-/docs/
+/CLAUDE.md
+/docs/*
+!/docs/handoffs/
+/docs/handoffs/*
+!/docs/handoffs/consolidado-evidencia-master.md
 /evaluation/
 /legacy/
 /preservation/

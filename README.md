@@ -122,6 +122,7 @@ Starting new work, or naming a frozen one, makes that work `active` and freezes 
 - Starts substantial work with specification, even when the initial brief sounds detailed.
 - Routes trivial, reversible changes away from unnecessary ceremony.
 - Keeps completed work out of the active plan and preserves its evidence in `TRACK.md`.
+- Writes each track record compact at the point of writing — state and evidence, never narrative or raw logs — so resuming a long run stays affordable without ever summarizing recorded history.
 - Verifies each task against observable state before advancing, rather than trusting the performer's own report.
 - Distinguishes *implemented*, *verified*, *attested*, and *not verified*, and never presents unverified work as complete.
 - Replans only future work; it never silently weakens the agreed outcome.

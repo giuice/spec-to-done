@@ -122,6 +122,7 @@ Iniciar um trabalho novo, ou nomear um congelado, torna aquele trabalho `active`
 - Começa trabalhos substanciais pela especificação, mesmo quando o briefing inicial parece detalhado.
 - Afasta mudanças triviais e reversíveis de uma cerimônia desnecessária.
 - Mantém o trabalho concluído fora do plano ativo e preserva suas evidências no `TRACK.md`.
+- Escreve cada registro do track já compacto na origem — estado e evidência, nunca narrativa ou logs brutos —, para que retomar um trabalho longo continue barato sem nunca resumir o histórico já registrado.
 - Verifica cada tarefa contra o estado observável antes de avançar, em vez de confiar no relato de quem executou.
 - Distingue *implementado*, *verificado*, *atestado* e *não verificado*, e nunca apresenta trabalho não verificado como concluído.
 - Replaneja somente o futuro; nunca enfraquece silenciosamente o resultado combinado.
