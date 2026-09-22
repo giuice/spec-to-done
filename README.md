@@ -76,6 +76,57 @@ Use spec-to-done to continue the support-inbox auto-triage work.
 
 The Skill reads the persisted artifacts, works out which stage is actually current, and picks up from evidence — not from a reconstruction of the chat history.
 
+If a recorded task still needs reconciliation, that comes first: validate the
+repaired plan, append any required checkpoint, and re-read PLAN and TRACK before
+selecting another task. A new plan version alone does not authorize execution.
+New TRACK records go at the end of the file; earlier entries keep their order.
+
+The earlier recovery correction failed a controlled Luna high diagnostic on
+2026-09-04: product work preceded its required checkpoint and TRACK history was
+reordered. Those results remain preserved. Four high diagnostics of the preceding
+local revision on 2026-09-11 produced one pass and three failures. Both recovery cases
+closed their initial checkpoint correctly and passed all nine independent product
+checks, but later inserted T3 into earlier TRACK history. The duplicate-checkpoint
+case stopped correctly; the premature-execution case performed product work before
+recognizing its unresolved barrier. All four ended with honest FAILED reports.
+The revision has not qualified for readiness. The local
+[diagnostic report](evaluation/recovery-control-luna-v2/REPORT.md) preserves the
+case results, raw evidence and fixture limitations.
+
+The preceding medium-v1 revision strengthened physical EOF append and the audit before task
+selection, and corrects the premature-execution fixture. Four fresh Luna **medium**
+diagnostics preserved TRACK prefixes; both positive cases passed all nine product
+checks. However, three cases failed execution/reconciliation behavior. The duplicate
+case stopped correctly and failed only exact report parity because of trailing
+spaces. None passed every frozen criterion; confirmation runs were not started.
+The first and last cases reported COMPLETED despite protocol violations, while
+the persisted-plan case reported PARTIAL without disclosing its missing checkpoint.
+The [medium diagnostic report](evaluation/recovery-control-medium-v1/REPORT.md)
+preserves these results separately from high; this is not a matched comparison.
+
+The current correction requires an evidence-backed entry decision before dispatch,
+a complete PLAN/TRACK dependency join before closure, and history-aware reporting.
+Its four frozen Luna medium diagnostics completed with two full passes and two
+failures. Both positive cases reconciled before product work, but later inserted
+T3 into old TRACK history; independent product checks passed 7/9 and 9/9. Both
+negative cases stopped correctly and preserved the files. All four reports
+acknowledged protocol failure and matched their persisted bodies. The revision
+remains unready; no extra calls or broad confirmation began. Local validation
+passes (227 repository tests and 11 evaluator/runner tests).
+The [current revision report](evaluation/recovery-control-medium-v2/REPORT.md)
+preserves the evidence and limits of this one-session-per-case sample.
+
+For current priorities and the decision about further testing, see the
+[current state and remaining work](docs/current-status.md).
+
+The recovery contract requires distinguishing a pending write from an irreparable
+protocol violation. An already-written plan must be validated from PLAN and TRACK
+without a lost transient receipt or another version increment. Duplicate checkpoints
+and execution across an unresolved gate require an honest failure report;
+they are never rewritten into a successful history. A stop or blocked recovery
+may leave pending work visible in PLAN. Verified facts can make an unchanged
+future task more precise without creating a new task or strategy version.
+
 ### 5. When it stops, it tells you why
 
 It keeps going until the outcome is verified or it hits something that genuinely requires a human: credentials, authority, a destructive or irreversible action, a real product decision, or an ambiguity it must not resolve alone. Every ending — success, partial, blocked, or failed — goes through the reporter, so the run never stops silently.

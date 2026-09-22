@@ -19,7 +19,7 @@ Planning is self-contained. Use only the contract, current PLAN, TRACK, and obse
 
 ## Operational call contract
 
-For the maintenance or material-replan call made immediately after a newly recorded task, the executor supplies all six inputs together:
+For maintenance or material replan, including recovery of a task recorded before interruption, the executor supplies all six inputs together:
 
 ```text
 - the complete SPEC;
@@ -30,11 +30,14 @@ For the maintenance or material-replan call made immediately after a newly recor
 - the executor-decided Gate: plan holds | replan required.
 ```
 
-Planning reads the complete inputs, writes the resulting PLAN, validates it as future-only, and returns control to the executor. Planning never writes TRACK, never appends a gate checkpoint, and never executes a task. The executor may reject an invalid planner result and call planning again, but it must not repair PLAN itself.
+Planning reads the complete inputs, constructs the candidate PLAN, and runs the quality gate before replacing the current PLAN. If validation fails, keep the existing PLAN byte-for-byte and return the specific defect. After a valid write, re-read PLAN to confirm it matches the validated candidate, then return control to the executor for the same triggering task's reconciliation and checkpoint, if required. The first task in the returned PLAN is future work, not the next action of this call. Planning never writes TRACK, never appends a gate checkpoint, and never executes a task. The executor may return a specific PLAN defect for correction, but it must not repair PLAN itself. Correct that pending transition at its intended version; do not increment again because validation failed. An unchanged invalid result is an unsuccessful repair, not a reason to repeat the same call indefinitely: return the defect to Execute for its **Stop and report** procedure.
 
 A reopening call uses the same complete SPEC, PLAN, TRACK, and observable state, plus the exhausted trigger and verified or attested resolution of its stable blocker. It does not create or change an inline Gate. Planning writes the first future-only PLAN of the new episode; Execute validates it and appends the existing named `replan reopened` checkpoint.
 
-The planner returns exactly one **internal receipt** to Execute. A receipt is
+The planner returns exactly one **internal receipt** to Execute for each validated
+transition, including valid exhaustion. If it cannot produce a valid transition,
+return the specific defect or impediment instead of a success receipt; Execute
+owns repair or **Stop and report**. A receipt is
 transient coordination output: it is never written or copied into TRACK, PLAN,
 REPORT, or `state.md`; it adds no gate, canonical state, artifact, or required
 field. Execute uses it only to validate the PLAN transition and render the
@@ -58,7 +61,10 @@ The exhaustion receipt is defined once beside **Replan exhausted** below.
 Return only the applicable internal receipt and no narration. Planning does not
 return attempt counters; Execute derives them from the complete TRACK lineage
 and copies the validated identity/version values into one checkpoint. Execute
-never persists the receipt itself.
+never persists the receipt itself. Receipts coordinate a live call; persisted
+SPEC, PLAN, TRACK, and current observations remain authoritative. After an
+interruption, Execute validates an already-written transition from those inputs
+without requiring the lost receipt or calling Plan merely to regenerate it.
 
 ## The SPEC is required
 
@@ -157,6 +163,7 @@ Field rules:
 
 - IDs are stable and never reused. A surviving task retains its ID across plan versions; a new task takes the next unused number from PLAN and TRACK. IDs attached to completed or attempted work are historical and cannot be recycled.
 - A surviving ID remains bound to the same future outcome. Materially changing `Task`, `Done when`, `Verify by`, `Covers`, lineage, purpose, or the result the task is intended to produce creates a new task and requires a new ID. Wording may be clarified under the same ID only when that identity is unchanged.
+- A verified fact may resolve a parameter already implied by that outcome: “contact the listed maintainer” can name the observed maintainer without becoming a different task. Carry the fact and its provenance into the task text or the performer's `Established facts`; do not leave a needed fact only in `Reasoning`. This refinement keeps the ID and version when success conditions, verification meaning, coverage, dependencies, lineage, purpose, and order stay the same. Choosing a different recipient, changing the required result, or repairing an invalid premise is a strategy change, not a wording refinement.
 - `Covers:` is mandatory on every task and maps to requirement and acceptance-criterion IDs that exist in the SPEC. Every Must-priority requirement and every acceptance criterion must be covered by TRACK `done`/`no_op` entries plus remaining PLAN tasks.
 - `Root:` is mandatory on every task and names the origin of its lineage. A task that starts one names itself; a continuation or a reopening carries the root's ID unchanged, however long the lineage grows. It is unconditional so that `TRACK.md` stays append-only: a root entry is written before anyone knows a continuation will exist, and it can never be edited afterwards to add the field.
 - `Continues:` appears only on a replan task that plans the remainder of one `partial`, `blocked`, or `failed` task, and names that **immediate** attempted predecessor, not the root.
@@ -206,7 +213,7 @@ Use this mode only when the executor supplies `Gate: plan holds`. Verified feedb
 
 1. Remove from PLAN every task ID already present in TRACK.
 2. Preserve the current version exactly and keep exactly one `Plan version:` field.
-3. Preserve each surviving task's ID, outcome, `Task`, `Done when`, `Verify by`, `Covers`, lineage, purpose, and relative order.
+3. Preserve each surviving task's ID, outcome, `Task`, `Done when`, `Verify by`, `Covers`, lineage, purpose, and relative order. The field-rule exception for verified parameter refinement applies: explain the observed binding without changing the task contract or strategy. Maintenance is not required to freeze wording that still contains a now-resolved parameter.
 4. Preserve every dependency between surviving tasks exactly. For a dependency that names an ID in TRACK, remove it when that task's `done`/`no_op` evidence satisfies the prerequisite; otherwise repoint it only to an unchanged surviving task that already represents the remaining prerequisite without changing either task's outcome identity. If neither is valid, maintenance is invalid: return control without writing PLAN so Execute remains inside reconciliation; do not invent a prerequisite.
 5. Do not add `Replanned because:`, `Continues:`, or `Reopens:`.
 6. Do not create a checkpoint. Planning writes PLAN; the executor owns TRACK and appends checkpoints only when the gate requires one.
@@ -314,11 +321,20 @@ Do not weaken, drop, reinterpret, or silently bypass a SPEC acceptance criterion
 
 Run this before writing an initial plan, a materially replanned plan, or checkpoint-maintained PLAN. Fix every missing item; do not ship a caveat.
 
+First join every candidate task ID and every `Depends on` ID to the attempted
+IDs in TRACK. Inspect the actual candidate blocks, not a copied quality verdict.
+Any overlap makes the candidate invalid and forbids both the write and a success
+receipt. Resolve each dependency by naming the future task that supplies its
+still-required state, or the verified evidence that already satisfies that exact
+prerequisite. A failed predecessor is not satisfied merely because a continuation
+has been planned; depend on that continuation until its result is verified.
+These checks are transient and add no fields to PLAN or the receipt.
+
 ```markdown
 - Grounded in an actual observation of current state: Pass / Missing
 - Every acceptance criterion accounted for by TRACK done/no_op, a remaining task, or an exhausted lineage that preserves it as an unsatisfied terminal residual: Pass / Missing
 - Every Must-priority requirement accounted for by TRACK done/no_op, a remaining task, or an exhausted lineage that preserves it as an unsatisfied terminal residual: Pass / Missing
-- Every task lists Covers, or a task that transitively depends on it does; no task sits outside every requirement path: Pass / Missing
+- Every task lists Covers with existing SPEC IDs; no task sits outside every requirement path: Pass / Missing
 - Every ID in Covers exists in the SPEC: Pass / Missing
 - Every task has one observable Done when: Pass / Missing
 - Every task has a concrete Verify by: Pass / Missing

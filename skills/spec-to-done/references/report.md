@@ -14,6 +14,15 @@ This procedure communicates only. It does not plan, replan, execute, independent
 
 Use it only when the run has reached a terminal path: every planned task is `done` or `no_op`; the plan is explicitly no-op; a blocker cannot be routed around; no valid continuation remains; the continuation bound is exhausted; or the user asked to stop. If valid work remains and the run is not terminal, return control to the composite root for the appropriate internal procedure. Do not fabricate terminality to make a report look finished.
 
+Execute's **Stop and report** procedure is also a terminal path. It may leave an
+unresolved gate, incomplete PLAN transition, or future tasks on disk. Preserve
+and report those facts; never ask Execute to erase them or manufacture a passing
+checkpoint as a prerequisite for reporting. A demonstrated irreparable protocol
+violation is `FAILED`, even when the delivered product passes its checks. Missing
+external evidence or authority that prevents recovery is `BLOCKED`. A user stop
+uses the ordinary evidence-based classification below and does not erase an
+already demonstrated protocol failure.
+
 Always produce exactly one of `COMPLETED`, `PARTIAL`, `BLOCKED`, `FAILED`, or `NO_OP` on every terminal path.
 
 ## Inputs
@@ -30,8 +39,19 @@ Without TRACK, reconstruct material facts only from observations that actually h
 
 First compare the final state to the contract and its evidence. Then select exactly one terminal classification using these mutually exclusive conditions, in order:
 
+Consume Execute's entry-decision evidence before considering product completion.
+If it names a historical violation, include the affected task and violated order
+in the outcome and select `FAILED`. Independently check that the supplied decision
+agrees with the TRACK task/closure order; if the input overlooked a task across an
+open gate, report that recorded violation rather than inherit a success label.
+This is inspection of existing evidence, not product verification or repair.
+If interruption removed the transient decision from context, derive
+the classification from persisted TRACK/PLAN and existing observations; never
+require a lost receipt or reconstruct an admission from memory.
+
 | Status | Select when |
 |---|---|
+| `FAILED` | Execute has established an irreparable protocol violation or an internal reconciliation defect with no lawful corrective action. Name the failure and report the delivered product and its verification separately. |
 | `NO_OP` | The requested state was already true and no change was needed: every relevant TRACK task is `no_op`, or PLAN declares `Status: no-op` with no tasks and supplies `Already true because` plus evidence. |
 | `COMPLETED` | Every required criterion is satisfied by current evidence. |
 | `BLOCKED` | A required outcome remains and external access, information, permission, or a user decision prevents valid continuation. |
@@ -63,6 +83,7 @@ Apply these evidence rules:
 - When multiple entries cover one criterion, combine them. Later verified or attested evidence may close an earlier unverified gap only when it actually observes or confirms the previously missing outcome.
 - An `Unresolved` item keeps its criterion unsatisfied until a later TRACK entry explicitly closes that item. A failed check, failed task, or destructive consequence remains material unless later final-state evidence explicitly supersedes it.
 - If coverage or history is missing, report that limit; do not assume a criterion was satisfied.
+- Distinguish product evidence from workflow integrity. Passing product tests, a late checkpoint, or a correction note does not supersede a demonstrated history or execution-order violation. Report the affected task, observed violation, pending work, and the evidence needed for any later recovery; never call that protocol run verified or successfully reconciled.
 
 The reporter may describe current verified facts but may not perform the verification that would establish them.
 

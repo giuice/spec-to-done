@@ -22,30 +22,117 @@ spec-interview/<slug>/
 
 `SPEC.md` is mandatory. If it is absent, malformed, or its readiness is not recorded in `state.md` as `Verdict: Ready`, execution does not begin: do not dispatch a task, do not verify one, and do not replan. Preserve every existing artifact untouched and return control to the composite root for Specify. A PLAN or a TRACK is evidence of what was attempted, never a substitute contract.
 
-Execute coordinates the post-task transition but never owns PLAN content. It supplies the complete inputs to `references/plan.md`, validates the returned PLAN, and writes only TRACK task records and checkpoints. If the planner result is invalid, invoke planning again; never reconstruct, patch, or replace PLAN inside Execute.
+Execute coordinates the post-task transition but never owns PLAN content. It supplies the complete inputs to `references/plan.md`, validates the returned PLAN, and writes only TRACK task records and checkpoints. Return a specific PLAN defect to planning; never reconstruct, patch, or replace PLAN inside Execute. A missing TRACK checkpoint belongs to Execute and does not require a PLAN rewrite.
+
+## Stop and report
+
+This procedure takes precedence over every reconciliation barrier and retry rule
+below. Those barriers authorize successful continuation; they cannot require a
+past violation to become untrue before the run may report failure.
+
+| Observed state | Required action |
+|---|---|
+| User asks to stop | Stop dispatch and repair attempts. Return to the root for Report with current results and pending work. |
+| A recorded side effect was repeated, product work crossed a required gate, TRACK history was rewritten/reordered, or a task/closure checkpoint was duplicated | Stop product work and protocol repair. Preserve all evidence and return to the root for Report with `FAILED` protocol status, even when product checks pass. |
+| Missing evidence, conflicting artifact identity, unavailable access, or an external capability prevents a unique lawful recovery | Preserve artifacts and return to the root for Report with the unresolved condition and the smallest required decision or evidence; classify an external impediment as `BLOCKED`. |
+| A repair returns the same defect with no new evidence or applicable corrective action | Stop that repair loop and return to the root for Report. An internal protocol defect is `FAILED`; an external impediment is `BLOCKED`. |
+
+An interrupted write is not by itself proof of corruption: inspect the artifacts
+and distinguish a pending lawful transition from a demonstrated violation.
+Repair a concrete pending operation when its inputs are available. Each repair
+must resolve the identified defect or establish new evidence that changes the
+next action; repeating an unchanged invalid planner result is not progress.
+The Full task-attempt budget does not authorize unlimited reconciliation retries.
+
+Use current observations, not a fabricated closure checkpoint, to communicate
+the impediment. Append a factual correction naming the affected task only when
+an unambiguous append is still possible and the fact is not already recorded.
+That note never changes chronology, erases the violation, or marks reconciliation
+passed. If TRACK cannot be appended reliably, leave it untouched and put the
+observed limitation in REPORT. Preserve the current PLAN as evidence of pending
+or conflicting work; do not empty it merely to enable reporting. No new task,
+gate value, receipt, or success checkpoint is required for this exit.
 
 ## Read-first completion barrier
+
+On entry, read SPEC, complete PLAN, and complete TRACK. Before any PLAN/TRACK
+write, product check with side effects, or task selection, produce the following
+compact evidence in the orchestration conversation. It is a transient inspection
+result, never a new file, PLAN field, TRACK entry, or receipt to persist. Use
+ordinary reads; no executable detector is required.
+
+**History replay.** List task IDs in physical TRACK order. For each task that
+opened `replan required`, show its task position, named closure position (or
+`missing`), and the first following task position (or `none`). Positions may be
+line numbers or record ordinals, but must use one consistent basis. Validate the
+closure's identity, versions, lineage and counters. A closure permits the next
+task only if it is unique, valid, and physically precedes that task. Mark a
+duplicate task/closure or a task before closure as a history violation immediately;
+do not reduce the history to each task's latest gate. Exhaustion closes this
+window while retaining its same-Root restriction; independent Roots remain
+eligible under the existing rules. A reopening is a different transition, not a
+duplicate of its exhaustion. Unambiguous equivalent historical wording is valid.
+
+**PLAN join.** If history is lawful, list each future task as
+`ID -> Depends on IDs -> TRACK status of any overlapping ID`. Include the task
+ID itself in this comparison. List `none` explicitly when there is no overlap.
+Compare all tasks, including later dependents, not just the apparent next task.
+An attempted ID or dependency still in PLAN is a pending transition even when
+the task is `done` or PLAN declares a higher version. Apply the remaining version,
+identity, lineage, exhaustion and coverage checks below as well.
+
+Then state `Entry decision: <branch>; trigger: <ID or none>; evidence: <specific
+positions/IDs or impediment>; next operation: <one permitted operation>`.
+Choose the first applicable branch:
+
+| Branch | Evidence | Permitted work of this invocation |
+|---|---|---|
+| `STOP` | Demonstrated history violation, user stop, or impediment preventing a unique lawful recovery | **Stop and report**. A history violation is `FAILED`: no planner call, PLAN repair, success checkpoint, or product work. Carry the violation to Report even if product checks previously passed. |
+| `RECONCILE` | Lawful history with a pending gate, missing checkpoint, attempted ID/dependency in PLAN, or another repairable transition defect | Take the oldest unresolved post-task window as `trigger`; enter **Complete the post-task critical section** at its first unfinished step. Validate PLAN; invoke Plan only if the persisted transition is invalid or absent, then authorize the missing closure. No new task record or dispatch. After `POST-TASK CLOSED(trigger)`, return to root. |
+| `REOPEN` | A valid exhausted lineage has matching verified or attested resolution | Resume **Reopening reconciliation** at its first unfinished step, then return to root without dispatch. |
+| `ADMIT` | Every prior window is reconciled and the PLAN join and remaining checks pass | Select at most one eligible task under step 1. If none remains, return to root for the ordinary terminal route. |
+
+A missing closure at physical EOF with no later task selects `RECONCILE`.
+A task followed by another task and only then the first task's closure selects
+`STOP`. These are different histories even if their last gate values match.
+If a required fact is unknown, report that impediment; do not emit `ADMIT` from
+an unsupported "audit passed" statement. Consume only the selected branch.
+
+If PLAN already reflects the pending trigger's valid transition, validate that
+result from persisted artifacts using **Recover a persisted transition** below,
+instead of planning it again or incrementing its version again. For
+material replan, exhaustion or reopening, append only the required missing
+checkpoint. For `plan holds` maintenance, keep the version and append no
+checkpoint. Re-read both artifacts and check reconciliation before returning to
+the root; a PLAN write alone does not close the trigger.
 
 Immediately after appending any task record, Execute enters the post-task critical
 section defined in **Record and close one task** below. There is no legal exit to
 a new task, the composite root, or REPORT until that same triggering task has a
 future-only PLAN, an effectively closed gate, every required named checkpoint,
-and a successful `POST-TASK CLOSED(trigger)` check.
+and a successful `POST-TASK CLOSED(trigger)` check, except the explicit
+**Stop and report** exit. That exit forbids further dispatch.
 
 This is a control-flow critical section, not an atomic filesystem transaction.
 A physical interruption may occur between writes; on resume, repair that window
 before any other work. Plan alone writes PLAN. Execute alone writes TRACK task
 records and checkpoints and never repairs PLAN itself.
 
-There is no task-record-to-REPORT path. `replan exhausted` closes only the triggering `Root:` and episode. Until a matching verified or attested resolution and reopening checkpoint exist, no same-Root continuation or task that still depends on the exhausted lineage may be dispatched; an evidence-independent task under another Root may continue. Exhaustion is terminal for the run only when every named checkpoint is valid, no matching resolution is pending, and PLAN contains no eligible future task. Execution never closes `state.md` or authors the final response; after reconciliation it returns through the existing composite route. Until these conditions hold, REPORT is forbidden.
+An ordinary terminal route requires reconciliation. `replan exhausted` closes only the triggering `Root:` and episode. Until a matching verified or attested resolution and reopening checkpoint exist, no same-Root continuation or task that still depends on the exhausted lineage may be dispatched; an evidence-independent task under another Root may continue. Exhaustion is terminal for the run only when every named checkpoint is valid, no matching resolution is pending, and PLAN contains no eligible future task. Execution never closes `state.md` or authors the final response; it returns through the existing composite route. Until these conditions hold, ordinary REPORT is forbidden; **Stop and report** remains available with the unresolved state disclosed.
 
 ## Execution modes
 
 Pick per task, in this order:
 
-**Delegated (default).** One subagent per task. Costs more total tokens — the subagent re-reads context you already hold — and buys two things worth more: your context stays clean, so a long run never hits lossy compaction; and the track becomes the only memory channel between tasks, which is what keeps it honest. A track written inline duplicates your context and quietly rots.
+**Delegated (default).** One subagent performs one task and returns; it does not select the next task or maintain workflow artifacts. The orchestrator remains responsible for verifying the result, updating TRACK, and completing reconciliation. This separates product work from coordination and reduces implementation detail in the orchestrator's context; it does not guarantee correct history or eliminate context limits.
 
 **Inline.** When the host provides no subagents, when the user asks for it, or when the whole plan is two trivial tasks. Everything else in this skill is unchanged — including verifying the postcondition as a separate act from doing the work.
+
+In either mode, keep the same handoff: performer result → orchestrator verification
+→ recorded gate → Plan → validated transition → checkpoint when required. In
+inline mode these are phases in one context, not independent agents. Stop product
+editing at the performer return and inspect the evidence before attributing a
+status. Calling or reading Plan does not itself authorize another product task.
 
 **Human handoff.** When the task must be performed by a person or outside your reach — a physical action, an approval, an access grant. Present the task, its `Done when`, and what evidence you need in plain language; never hand a person the structured return contract below. Ask only: did it happen, what is now true, and anything unexpected. **You** turn that answer into the track entry, recording it as `attested`. Never mark such a task done on the assumption it happened.
 
@@ -55,6 +142,19 @@ Pick per task, in this order:
 
 ```
 read SPEC + PLAN + TRACK
+   |
+   v
+stop, irreparable violation, or recovery impediment?
+   +-- yes --> Stop and report --> root --> Report
+   |
+   no
+   |
+   v
+recorded work needs reconciliation?
+   |
+   +-- yes --> close that trigger / reopening --> return to root
+   |
+   no
    |
    v
 select next unattempted task
@@ -86,7 +186,7 @@ complete the gate
 re-read TRACK + PLAN + observable state
    |
    v
-reconciled? -- no --> repair; do not dispatch, report, or return to root
+reconciled? -- no --> concrete repair or Stop and report; never dispatch
    |
   yes
    |
@@ -100,13 +200,17 @@ return to composite root
 
 A task cycle is not complete when its task record is appended. It is complete only after the gate has been resolved, PLAN is future-only again, every required named checkpoint has been appended, and TRACK and PLAN have been re-read.
 
-No status may skip this sequence. One Execute invocation handles at most one task and its complete reconciliation; never preselect or batch multiple tasks.
+No status may skip this sequence to authorize more work. One Execute invocation handles at most one task and its complete reconciliation, or its explicit **Stop and report** exit; never preselect or batch multiple tasks.
 
 ### 1. Select the next task
 
-When the root selects Execute, reconcile the most recently recorded task before selecting one new task.
+Reach selection only through the reconciled-work entry above. An invocation that
+repairs a recorded task returns to the root before a new invocation selects work.
+Selection requires the current invocation's `ADMIT` decision. A `RECONCILE` or
+`REOPEN` decision expires on return to root and never turns into a dispatch permit.
 
-Do not select, dispatch, report, or return to the composite root while any of these is true:
+Do not select or dispatch while any of these is true. Resolve a recoverable
+window or use **Stop and report**; an ordinary terminal route remains forbidden:
 
 - a task's effective gate is `replan required`;
 - its required named checkpoint is missing or names a different task;
@@ -115,7 +219,7 @@ Do not select, dispatch, report, or return to the composite root while any of th
 - PLAN declares `Status: no-op` after TRACK contains any task record;
 - PLAN does not contain exactly one `Plan version:` field;
 - PLAN and TRACK disagree about version, survivor identity, order, lineage, blocker, or remaining future work;
-- a same-Root continuation or task still dependent on an exhausted lineage was dispatched before matching verified or attested reopening.
+- a same-Root continuation or task still dependent on an exhausted lineage was dispatched before matching verified or attested reopening; this is a history violation and takes **Stop and report**.
 
 Repair the applicable interruption window first.
 
@@ -253,10 +357,12 @@ Label the verification, because the reporter depends on the distinction:
 
 **You are the only writer.** Performers return structured blocks; you validate and append. One writer means one format, no concurrent writes, and a natural point to decide on replanning.
 
-Complete one triggering task in this exact order:
+For a newly executed task, complete this sequence. A recorded task enters
+**Complete the post-task critical section** directly, without a new record:
 
 ```text
 assemble task record
+-> decide its inline Gate from verified evidence
 -> validate mandatory fields
 -> append task record
 -> enter post-task critical section
@@ -269,9 +375,32 @@ assemble task record
 ```
 
 Once the task record is appended, no status, planner result, empty PLAN, user
-stop, or apparent terminal condition may skip the remaining sequence.
+stop, or apparent terminal condition authorizes another task without the
+remaining sequence. **Stop and report** can end the run with that sequence
+explicitly unresolved.
 
 Append to `spec-interview/<slug>/TRACK.md`. Historical TRACK records may use equivalent headings and wording when their meaning is unambiguous; preserve them, never rewrite them. Every new record uses the canonical field names below, and does not rename, merge, or omit a field its status requires.
+
+For every TRACK write, use a file operation that appends at the physical end:
+the host's append primitive or a file handle opened in append mode. **Do not use
+a context-matching patch or search-and-replace edit on an existing TRACK.**
+Task headings and `Gate:` lines recur; even an edit described as "append" can
+match an earlier occurrence. The same rule applies to task records, checkpoints,
+and factual corrections.
+
+Immediately before writing, retain the existing bytes as `before` and finish
+validating the new block as `addition`. The only permitted resulting bytes are
+`before + addition`, with any separating newline included in `addition`. If
+the host only supports whole-file replacement, assemble that candidate away
+from TRACK, verify this equality before persisting it, and confirm TRACK still
+equals `before`. A changed file must be re-read; never overwrite a concurrent
+change. If no permitted tool can make this write reliably, take **Stop and report**.
+
+Re-read after the write and confirm the complete old prefix is unchanged and
+the new block occurs once, at the end. A checkpoint belongs after the history
+already recorded, not beside its trigger's earlier entry.
+If a write violated this rule, use **Stop and report**;
+moving entries or appending duplicate checkpoints cannot repair chronology.
 
 ```markdown
 # TRACK: <slug>
@@ -404,7 +533,7 @@ post-task critical section.
 
 #### Decide the gate from evidence
 
-Run this after **every** task, without exception. It is a checkpoint, not a rewrite: most gates should avoid material replanning, but even `plan holds` still calls Plan for future-only maintenance.
+Run this after verifying **every** task and before appending its record, without exception. It is a checkpoint, not a rewrite: most gates should avoid material replanning, but even `plan holds` still calls Plan for future-only maintenance.
 
 Ask: *is the remaining plan still true, given what is now known?*
 
@@ -432,25 +561,35 @@ Otherwise set `Gate: plan holds`; Plan performs future-only maintenance before E
 
 `Gate: replan required` is an intermediate state, never a terminal state.
 
-While it is the effective gate for a task, it is forbidden to:
+While it is the effective gate for a task, successful continuation is forbidden.
+Except through **Stop and report**, do not:
 
 - select or dispatch another task;
 - invoke `references/report.md`;
 - classify the run as terminal;
 - return control to the composite root.
 
-After every task record is appended:
+After every task record is appended, or when resuming its pending window:
 
-1. Decide the inline gate from verified evidence.
-2. Invoke `references/plan.md` with the complete SPEC, current PLAN, complete TRACK, observable state, triggering task, and decided gate. Execute never edits PLAN directly.
-3. Match exactly one row of the transition table to exactly one internal Plan receipt. Reject a receipt that does not match the gate.
-4. Validate the resulting PLAN with Plan's quality gate. For a `partial` trigger, require exclusively either one direct continuation at the trigger's former relative position with the same `Root:` and `Continues: <trigger task ID>`, or same-Root exhaustion with no continuation. Reject both, neither, a new Root, an unrelated replacement outcome, or a validation task whose required capability is unavailable.
+1. Read the gate already in the record; it was decided and validated before append. Do not rewrite the historical record.
+2. If PLAN has not undergone the pending transition, invoke `references/plan.md` with the complete SPEC, current PLAN, complete TRACK, observable state, triggering task, and recorded gate. Execute never edits PLAN directly. Otherwise use **Recover a persisted transition** and skip the PLAN write.
+3. Match exactly one row of the transition table to the validated transition. Check any live receipt against the persisted result. If the receipt is absent or disagrees, independently validate the persisted transition using **Recover a persisted transition**; a unique valid result may proceed without another Plan call. Derive identity and version facts from artifacts and never copy conflicting receipt values. A receipt alone cannot establish a transition or override its defects.
+4. Validate the resulting PLAN with Plan's quality gate and repeat the **PLAN join** against the newly read bytes. Show each surviving dependency's actual target; a printed `Pass` or a Plan receipt is not this check. Any dependency to an attempted ID invalidates the transition, even if the first task has no dependencies. Return that defect to Plan at the intended version before appending a closure. For a `partial` trigger, require exclusively either one direct continuation at the trigger's former relative position with the same `Root:` and `Continues: <trigger task ID>`, or same-Root exhaustion with no continuation. Reject both, neither, a new Root, an unrelated replacement outcome, or a validation task whose required capability is unavailable.
 5. Derive `root_attempts`, `continuation_attempts`, and `total_lineage_attempts` from the complete TRACK entries for the triggering Root's current episode. Do not copy counters from Plan, infer them from exhaustion, or use the lineage limits as the observed counts.
 
 ##### The only Full checkpoint templates
 
-For a valid material replan, copy the receipt's validated trigger, versions, and
-Root and append exactly:
+Before appending a closure, state the validated trigger, transition/version,
+empty PLAN/TRACK overlap, and the number of existing matching closures. Append
+only when that number is zero and the transition is valid. Reuse one valid
+closure; more than one takes **Stop and report**. This evidence stays transient.
+The trigger must be the task just recorded in this invocation or the trigger
+named by its `RECONCILE` decision. Authorization comes from completing that
+trigger's post-task critical section; an `ADMIT` decision alone, a stale decision,
+or a different trigger cannot authorize a closure.
+
+For a valid material replan, use the validated trigger, versions, and Root from
+the persisted transition (and receipt, when available) and append exactly:
 
 ```markdown
 ### Replan checkpoint — <trigger task ID>
@@ -464,8 +603,8 @@ total_lineage_attempts: <1-3>
 total_lineage_limit: 3
 ```
 
-For valid exhaustion, copy the receipt's validated trigger, version, Root, and
-blocker and append exactly:
+For valid exhaustion, use the validated trigger, version, Root, and blocker from
+the persisted transition (and receipt, when available) and append exactly:
 
 ```markdown
 ### Replan checkpoint — <trigger task ID>
@@ -479,9 +618,14 @@ total_lineage_attempts: <1-3>
 total_lineage_limit: 3
 ```
 
-For `PLAN maintenance complete`, append no checkpoint. If any receipt, PLAN, or
-checkpoint is invalid, invoke planning again. Never repair PLAN in Execute and
-never append a checkpoint from an invalid receipt.
+For `PLAN maintenance complete`, append no checkpoint. Correct an invalid
+PLAN through Plan at the pending transition's intended version. A receipt defect
+alone does not require a PLAN write or another planning call.
+Execute appends a missing checkpoint only after validating the transition; it
+does not send a TRACK defect to Plan. Reuse a matching checkpoint already present.
+Never repair PLAN in Execute, append a duplicate closure, or persist a checkpoint
+from an invalid PLAN transition. A repeated unchanged defect or an irreparable
+historical violation takes **Stop and report**.
 
 Re-read complete PLAN and complete TRACK, then evaluate the single exit
 predicate below. Do not select another task in this invocation.
@@ -505,18 +649,53 @@ A `partial`, `blocked`, or `failed` task with `Gate: plan holds` is a format err
 
 This check is transient. Do not append it or its verdict to TRACK.
 
-If all twelve pass: return to the composite root. If any one fails: remain in
-reconciliation. These are the only two outcomes of the predicate.
+If all twelve pass: return to the composite root for routing. Otherwise no new
+task is authorized: perform the specific lawful repair still available, or take
+**Stop and report**. A duplicate closure or prohibited prior dispatch cannot be
+made valid by another append. Reporting that failure does not make this predicate
+true and must never be counted as a successful recovery.
+
+### Recover a persisted transition
+
+The original Plan receipt is optional after interruption. Read the triggering
+TRACK record, later named checkpoints, complete current PLAN, SPEC, and current
+observable state. Establish the trigger's recorded plan version `N`, identity,
+Root, gate, and actual episode attempts before choosing the matching transition:
+
+| Persisted transition | Recovery operation |
+|---|---|
+| `plan holds`, same-version PLAN already maintained and future-only | Validate the maintained PLAN; append no checkpoint and do not rewrite PLAN. |
+| `replan required`, valid material PLAN at `N+1` identifying this trigger in `Replanned because` | Validate contract, coverage, new IDs, lineage, survivors, dependencies, and the recorded reason; append only the missing `replan done` checkpoint. |
+| `replan required`, same-version PLAN has removed the exhausted episode | Confirm from current evidence and TRACK that no valid same-Root continuation remains and independent Roots are preserved; append only the missing exhaustion checkpoint. |
+| Matching valid checkpoint already exists | Validate the persisted result and reuse the checkpoint; do not write another one. |
+| PLAN still contains the attempted trigger or has not made the required transition | Ask Plan to complete or correct that transition; validate it before appending a checkpoint. |
+
+A valid persisted PLAN with only its closure missing stays byte-for-byte unchanged
+during recovery: the next write is Execute's missing checkpoint, not product work
+or another PLAN version. An invalid persisted PLAN stays under `RECONCILE`; its
+version number does not make it eligible for a checkpoint or for execution.
+
+A higher version alone is insufficient: prove which trigger it belongs to and
+which transition it implements. Do not reconstruct a lost receipt from memory,
+increment a valid `N+1` again, or infer a missing historical fact just to close a
+gate. If conflicting versions or missing evidence prevent a unique transition,
+use **Stop and report** with the precise impediment. Reopening uses the same
+artifact-based validation under the following procedure.
 
 ### Reopening reconciliation
 
 When the root routes an exhausted lineage back to Execute because its stable blocker now has verified or explicitly attested resolution, reconcile without dispatching a product task:
 
+Resume from the first unfinished step: reuse matching resolution evidence and a
+valid higher-version `Reopens:` PLAN already persisted for this reopening. Do not
+append that evidence again, increment the version again, or duplicate an existing
+matching reopening checkpoint.
+
 1. Confirm the named exhaustion checkpoint identifies the trigger and its Root-derived blocker.
-2. Append matching resolution evidence without changing the blocker, cause, condition, or history.
-3. Invoke Plan under its reopening contract. Reopening creates no inline Gate.
+2. If matching resolution evidence is absent, append it without changing the blocker, cause, condition, or history; otherwise reuse it.
+3. If this reopening has no valid higher-version PLAN yet, invoke Plan under its reopening contract; otherwise validate and reuse that PLAN. Reopening creates no inline Gate.
 4. Validate the returned PLAN with Plan's quality gate and the reopening contract. Additionally require version +1 and a first replacement with a new numeric ID, the same `Root:`, `Reopens: <exhausted task ID>`, and no `Continues:`.
-5. Append the existing named `replan reopened (plan version N)` checkpoint for that exhausted trigger and blocker.
+5. If its matching checkpoint is absent, append the existing named `replan reopened (plan version N)` checkpoint for that exhausted trigger and blocker; otherwise validate and reuse it.
 6. Re-read PLAN and TRACK, confirm the reopening checkpoint and future-only PLAN agree, and return to the composite root without dispatching the reopened task.
 
 Reopening changes neither the canonical gate vocabulary nor TRACK's required task fields.
@@ -525,7 +704,7 @@ Reopening changes neither the canonical gate vocabulary nor TRACK's required tas
 
 After reconciliation, return to the composite root. The root alone decides whether the next reference is Execute or Report under `SKILL.md`; Execute never selects another task, invokes Report, closes `state.md`, or emits the final response.
 
-An effective `replan required`, eligible future PLAN work, or invalid exhaustion state forbids a terminal route. An unresolved exhausted lineage does not forbid independent future work; it reaches the terminal route only after every other eligible lineage is also reconciled and PLAN is empty. On a valid terminal route, Report persists `REPORT.md`; the root then closes `state.md` and emits the persisted body byte-for-byte.
+An effective `replan required`, eligible future PLAN work, or invalid exhaustion state forbids ordinary completion. **Stop and report** permits a failed, blocked, or user-stopped terminal route that retains and discloses those residuals. An unresolved exhausted lineage does not forbid independent future work; ordinary exhaustion reaches the terminal route only after every other eligible lineage is also reconciled and PLAN is empty. On a terminal route, Report persists `REPORT.md`; the root then closes `state.md` and emits the persisted body byte-for-byte.
 
 Execution does not construct or paraphrase the terminal response. Invoke `references/report.md` through the existing composite route. After REPORT is persisted and the composite root closes `state.md`, emit exactly the persisted report body byte-for-byte. Do not reconstruct Markdown, add narration, or replace the persisted body.
 
@@ -540,15 +719,15 @@ Stop and ask the user — do not decide alone — when:
 - the work has drifted far enough from the contract that finishing it would satisfy a different goal;
 - a blocker needs access, credentials, or a decision only the user has.
 
-Return the state to the composite root for routing through `references/report.md` rather than improvising a new objective.
+Use **Stop and report** to return the state to the composite root for routing through `references/report.md`. Escalation does not require a false successful reconciliation first.
 
 ---
 
 ## Resuming
 
-`TRACK.md` is the resume point. On restart, read the contract, complete `PLAN.md`, and complete `TRACK.md`. First reconcile each interruption window without changing any existing entry: execution-to-TRACK uses the step 2 pre-dispatch state check before recording; TRACK-to-gate resolves the recorded task's effective gate; gate-to-PLAN compares that task's gate and checkpoint to PLAN before any continuation is created. If a task still has effective `replan required` but PLAN is already at a valid higher version, append the canonical named `Replan checkpoint` for that same task with its previous and new versions. If PLAN remains at the same version, invoke the replanner. Never dispatch a recorded task ID.
+`TRACK.md` is the resume point. Use the entry paths in **Read-first completion barrier** before selecting work. Execution-to-TRACK recovery uses the step 2 pre-dispatch state check before recording; TRACK-to-gate and gate-to-PLAN recovery use the reconciliation-only path for the recorded trigger. If PLAN remains at the same version with effective `replan required`, invoke the replanner. If it already contains that trigger's valid higher-version result, append only the missing canonical checkpoint. Never dispatch a recorded task ID.
 
-For every checkpoint that says `replan exhausted`, confirm that it names the triggering task, carries `Blocker: BLK-<slug>-<root-task-id>` derived from that task's `Root:`, and leaves no same-Root continuation or dependent task in the closed episode. Later tasks under other Roots are valid when their prerequisites are independently satisfied. When matching resolution exists, follow Reopening reconciliation above: append the evidence, invoke Plan, validate the new `Reopens:` PLAN, append the named reopening checkpoint, and return to root without dispatching. Preserve all earlier entries and retain the exhausted lineage as historical evidence.
+For every checkpoint that says `replan exhausted`, confirm that it names the triggering task, carries `Blocker: BLK-<slug>-<root-task-id>` derived from that task's `Root:`, and leaves no same-Root continuation or dependent task in the closed episode. Later tasks under other Roots are valid when their prerequisites are independently satisfied. When matching resolution exists, follow the conditional steps of Reopening reconciliation above and return to root without dispatching. Preserve all earlier entries and retain the exhausted lineage as historical evidence.
 
 Do not re-run completed tasks. Re-verify a completed task only when a later discovery may have invalidated its postcondition.
 
