@@ -76,6 +76,59 @@ Use spec-to-done para continuar o trabalho de triagem automática do suporte.
 
 A Skill lê os artefatos persistidos, descobre qual etapa está realmente em aberto e retoma a partir da evidência — não de uma reconstrução do histórico do chat.
 
+Se uma tarefa registrada ainda precisa de reconciliação, isso vem primeiro:
+validar o plano reparado, acrescentar o checkpoint necessário e reler PLAN e
+TRACK antes de selecionar outra tarefa. Uma nova versão do plano, sozinha, não
+autoriza execução. Novos registros vão no fim do TRACK; os anteriores mantêm
+sua ordem.
+
+A correção anterior de retomada falhou numa diagnóstica controlada com Luna high
+em 2026-09-04: houve alteração do produto antes do checkpoint obrigatório e
+inserção no histórico anterior do TRACK. Esses resultados permanecem preservados.
+Quatro diagnósticos high da revisão local anterior em 2026-09-11 produziram um aprovado
+e três falhos. Os dois casos de retomada fecharam corretamente o checkpoint
+inicial e passaram nas nove verificações independentes de produto, mas depois
+inseriram T3 no histórico anterior do TRACK. O caso de checkpoint duplicado parou
+corretamente; o de execução prematura alterou o produto antes de reconhecer a
+barreira pendente. Os quatro terminaram com relatos honestos de FAILED.
+A revisão não atingiu o gate de prontidão. O
+[relatório local dos diagnósticos](evaluation/recovery-control-luna-v2/REPORT.pt-BR.md)
+preserva os resultados, a evidência bruta e as limitações do caso preparado.
+
+A revisão medium-v1 anterior reforçou o append físico e a auditoria antes de selecionar tarefas,
+além de corrigir o fixture de execução prematura. Quatro diagnósticos novos em
+Luna **medium** preservaram os prefixos do TRACK; os dois casos positivos passaram
+nas nove verificações de produto. Porém, três casos falharam na execução/reconciliação.
+O caso de duplicata parou corretamente e falhou apenas na igualdade textual do
+relatório, por espaços finais. Nenhum passou integralmente; as rodadas de confirmação
+não foram iniciadas. O primeiro e o último relataram COMPLETED apesar das violações;
+o caso de PLAN persistido relatou PARTIAL sem expor o checkpoint ausente.
+O [relatório medium](evaluation/recovery-control-medium-v1/REPORT.pt-BR.md) preserva
+esses resultados separados de high; não é uma comparação com condições equivalentes.
+
+A correção atual exige uma decisão de entrada sustentada por evidência antes de
+executar, a relação completa PLAN/TRACK antes do checkpoint e relato baseado no
+histórico. Os quatro diagnósticos congelados em Luna medium terminaram com duas
+aprovações integrais e duas falhas. Os dois positivos reconciliaram antes de agir,
+mas depois inseriram T3 no histórico anterior do TRACK; produto passou em 7/9 e
+9/9 verificações. Os dois negativos pararam corretamente e preservaram os arquivos.
+Os quatro relatos reconheceram falha de protocolo e tiveram paridade textual.
+A revisão continua sem prontidão; não houve chamadas extras nem confirmação ampla.
+A validação local passa (227 testes do repositório e 11 do avaliador/runner).
+O [relatório da revisão atual](evaluation/recovery-control-medium-v2/REPORT.pt-BR.md)
+preserva a evidência e os limites desta amostra de uma sessão por caso.
+
+Para acompanhar as prioridades atuais e a decisão sobre novos testes,
+consulte o [estado atual e trabalho restante](docs/current-status.pt-BR.md).
+
+O contrato de retomada exige distinguir uma escrita pendente de uma violação
+irreparável do protocolo. Um plano já gravado deve ser validado por PLAN e TRACK,
+sem depender de recibo transitório perdido nem incrementar a versão novamente.
+Checkpoints duplicados e execução antes de fechar o gate exigem relato de
+falha; o histórico não é reescrito para parecer válido. Uma parada ou recuperação
+bloqueada pode deixar trabalho pendente visível no PLAN. Fatos verificados podem
+tornar uma tarefa futura mais precisa sem criar outra tarefa ou versão da estratégia.
+
 ### 5. Quando ela para, ela diz por quê
 
 Ela continua até o resultado estar verificado ou até esbarrar em algo que realmente exige um humano: credenciais, autorização, uma ação destrutiva ou irreversível, uma decisão real de produto, ou uma ambiguidade que ela não deve resolver sozinha. Todo encerramento — sucesso, parcial, bloqueado ou falho — passa pelo reporter, então a execução nunca para em silêncio.
@@ -122,6 +175,7 @@ Iniciar um trabalho novo, ou nomear um congelado, torna aquele trabalho `active`
 - Começa trabalhos substanciais pela especificação, mesmo quando o briefing inicial parece detalhado.
 - Afasta mudanças triviais e reversíveis de uma cerimônia desnecessária.
 - Mantém o trabalho concluído fora do plano ativo e preserva suas evidências no `TRACK.md`.
+- Escreve cada registro do track já compacto na origem — estado e evidência, nunca narrativa ou logs brutos —, para que retomar um trabalho longo continue barato sem nunca resumir o histórico já registrado.
 - Verifica cada tarefa contra o estado observável antes de avançar, em vez de confiar no relato de quem executou.
 - Distingue *implementado*, *verificado*, *atestado* e *não verificado*, e nunca apresenta trabalho não verificado como concluído.
 - Replaneja somente o futuro; nunca enfraquece silenciosamente o resultado combinado.
