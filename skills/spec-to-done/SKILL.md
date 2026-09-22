@@ -44,5 +44,7 @@ After every selected reference return here and route again. Execute reads the lo
 
 On a terminal route, treat the report body as a single immutable output: persist it after the `REPORT.md` header, then emit that exact body byte-for-byte as the developer response. Do not reconstruct, paraphrase, prefix, suffix, or replace it with routing, execution, or validation narration.
 
+Terminal finalization has one order, and no step may precede the one before it: reporting persists `REPORT.md`; the composite root then changes `state.md` to `Status: closed`; then the root reads the persisted report body from disk and emits exactly those characters. Execute never performs any of these three steps. A run whose PLAN still contains actionable work has not reached a terminal route; `closed` records that this invocation ended, never that the contract was satisfied.
+
 ## Full protocol
 A lineage permits one root attempt and at most two continuation attempts per episode, for a maximum of three attempts: T1 is the root, T2 and T3 are continuations, and a fourth attempt in the same episode is forbidden. Use a stable `Blocker: BLK-<slug>-<root-task-id>`. Reopen only a matching exhausted blocker after verified or explicitly attested resolution, append evidence and a new episode checkpoint, and preserve history. Reconcile execution→TRACK, TRACK→gate, and gate→PLAN before future work; never repeat a recorded ID or completed side effect.

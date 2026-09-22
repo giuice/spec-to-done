@@ -261,7 +261,7 @@ Invoke `references/plan.md` in replan mode when any of these holds:
 - a deviation changed what later tasks can assume
 ```
 
-Otherwise state that the plan still holds and continue.
+Otherwise set `Gate: plan holds` and invoke `references/plan.md` for future-only maintenance before continuing. Maintenance removes the completed task from PLAN, keeps the plan version unchanged, and appends no checkpoint. A PLAN that still lists an attempted or completed task ID is not a plan that holds.
 
 **Unconfirmed discoveries never redraw the strategy.** If a `[reported, unconfirmed]` fact would invalidate later tasks, confirm it first; if confirming it takes real work, the only replan it may drive is one that adds a validation task. The strategy rewrite waits for that task's verified result.
 
@@ -278,6 +278,10 @@ Stop the loop and invoke `references/report.md` when:
 - the user asks to stop.
 
 Never stop silently. Every exit goes through the reporter.
+
+Before taking a terminal route, confirm PLAN contains no remaining actionable task and no task ID already present in TRACK. Remaining future work forbids ordinary completion; reconcile it or report the run as unfinished.
+
+Execution never closes `state.md` and never authors the final response. Invoke `references/report.md` through the composite route and return to the root, which closes `state.md` after `REPORT.md` is persisted.
 
 ---
 
