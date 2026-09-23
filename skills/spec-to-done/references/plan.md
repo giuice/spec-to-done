@@ -102,6 +102,7 @@ Write the current future-only strategy to `spec-interview/<slug>/PLAN.md`:
 Spec: ./SPEC.md
 Goal: <one sentence, restated from the contract or the user's words verbatim>
 Plan version: 1
+Highest task ID reserved: T2
 Replanned because: <concrete verified trigger>  # omit on version 1 and maintenance
 
 ## T1 — <outcome-shaped title>
@@ -125,7 +126,7 @@ Depends on: T1
 
 Field rules:
 
-- IDs are stable and never reused. A surviving task retains its ID across plan versions; a new task takes the next unused number from PLAN and every TRACK segment. IDs attached to completed or attempted work are historical and cannot be recycled.
+- IDs are stable and never reused; surviving tasks retain their IDs. Preserve `Highest task ID reserved` on every PLAN rewrite, including maintenance and empty plans; allocate above the maximum of this value, current task IDs, and the latest TRACK reservation checkpoint. The executor checkpoints that maximum before PLAN removes tasks. If missing or inconsistent, recover it from PLAN and all TRACK segments; never guess across missing history. IDs attached to removed, completed, or attempted work cannot be recycled.
 - `Covers:` is mandatory on every task and maps to requirement and acceptance-criterion IDs that exist in the SPEC. Every Must-priority requirement and every acceptance criterion must be covered by TRACK `done`/`no_op` entries plus remaining PLAN tasks.
 - `Root:` is mandatory on every task and names the origin of its lineage. A task that starts one names itself; a continuation or a reopening carries the root's ID unchanged, however long the lineage grows. It is unconditional so that `TRACK.md` stays append-only: a root entry is written before anyone knows a continuation will exist, and it can never be edited afterwards to add the field.
 - `Continues:` appears only on a replan task that plans the remainder of one `partial`, `blocked`, or `failed` task, and names that **immediate** attempted predecessor, not the root.

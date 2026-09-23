@@ -103,11 +103,13 @@ SPEC.md        the outcome contract
 PLAN.md        future work
 TRACK.md       append-only execution evidence (active segment)
 track/         sealed TRACK segments, one per completed phase
-SNAPSHOT.md    one-page current state, rewritten at every gate; the resume point
+SNAPSHOT.md    compact current state and evidence pointers; the resume point
 REPORT.md      the final developer-facing result
 ```
 
 Because the state lives in these artifacts instead of only in the conversation, the work can survive interruptions, context limits, and a new session without reconstructing progress from memory.
+
+The snapshot carries decisions affecting remaining work, unresolved gaps, and pointers into TRACK. Each gate updates it from the previous valid snapshot and new entries; decisions leave only with a recorded reason, and gaps require explicit resolution. One page is a target, never a reason to drop material facts. TRACK remains authoritative; PLAN retains the highest reserved task ID to avoid recycling IDs across phases.
 
 ### One active work at a time
 

@@ -247,6 +247,8 @@ TRACK rules:
 
 Run this after **every** task, without exception. It is a checkpoint, not a rewrite: most gates should pass without a replan.
 
+Include `Highest task ID reserved` in the TRACK gate checkpoint before PLAN maintenance or replanning: retain the maximum from PLAN metadata, its task IDs, and the previous reservation checkpoint. Recover missing reservation metadata as specified in `references/plan.md`.
+
 Ask: *is the remaining plan still true, given what is now known?*
 
 Invoke `references/plan.md` in replan mode when any of these holds:
@@ -310,6 +312,7 @@ On a long run the record outgrows a single read. Two rules keep resuming cheap w
 ### Segment opened — <label>
 Sealed: track/TRACK-<nn>-<label>.md
 Plan version: N
+Highest task ID reserved: T<n>
 Open lineages: <root> (<attempts used>/3, Blocker: BLK-<slug>-<root> or none), ...
 ```
 
@@ -322,7 +325,7 @@ Open lineages: <root> (<attempts used>/3, Blocker: BLK-<slug>-<root> or none), .
 
 ```markdown
 # SNAPSHOT: <slug>
-Updated after: <heading of the last TRACK entry> (plan version N)
+Updated after: <TRACK file + entry heading> (plan version N)
 
 ## Deliverables
 - <path> — <current version or state> — <accepted | in review | rework | not started>
@@ -333,16 +336,22 @@ Updated after: <heading of the last TRACK entry> (plan version N)
 ## Blockers
 - BLK-<slug>-<root>: <what is blocked> — resolution task <id> — resolution verified: yes | no
 
-## Decisions in force
-- <decision not yet reflected in the deliverables> — recorded in <TRACK entry heading>
+## Constraints and decisions affecting remaining work
+- <operational consequence> — affects <task or criterion IDs> — source <TRACK file + entry heading>
 
-## Next
-- <next task IDs in PLAN order>
+## Unresolved
+- <gap, risk, unverified assumption, or pending check> — affects <criterion IDs> — source <TRACK file + entry heading>
+
+## Coverage pointers
+- <criterion IDs> — <TRACK file + entry heading containing evidence and any later correction>
 ```
 
 - SNAPSHOT is derived. TRACK wins every disagreement; SNAPSHOT holds no evidence and no history, only the current state and pointers to the TRACK entries that record it.
 - Write it after the task record and its gate, never instead of them.
-- If it is missing, or its `Updated after` line does not name the last TRACK entry, rebuild it from the record before any dispatch.
+- Update from the last valid snapshot plus subsequent TRACK entries; reread older entries only to resolve a specific gap or conflict. A snapshot is stale when `Updated after` differs from the last TRACK entry or current PLAN version. Reconcile it before dispatch; rebuild from the whole record only if missing, inconsistent, or its source checkpoint cannot be found. After sealing, update pointers to the sealed file.
+- At each gate, retain decisions that constrain remaining tasks or verification, even if already implemented. Remove one only with a TRACK-recorded reason: superseded, condition verified and no longer needed, no remaining task or check affected, or preserved in a document the workflow must read before acting. Keep uncertain cases; never remove their history.
+- Carry unresolved items until TRACK explicitly resolves or supersedes them; a phase boundary or lack of a blocker is not resolution. Keep unverified assumptions labelled, never promote them to facts.
+- Aim for one page: one line per item, omit empty sections, reference SPEC and PLAN instead of duplicating them, and leave rationale and evidence in TRACK. Group coverage pointers where possible; preserve material state even when it exceeds one page. Pointers locate evidence; they do not establish satisfaction.
 
 **Migration.** A TRACK written before this rule has no segments. At its next gate checkpoint, seal it: cut only at gate-checkpoint boundaries into consecutive segments, one per completed phase, so that their concatenation is byte-identical to the original file; open a new segment with the checkpoint above; build `SNAPSHOT.md` from the whole record once.
 

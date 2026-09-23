@@ -48,6 +48,8 @@ Build a private coverage table before compressing. It is scaffolding, not necess
 
 Join every TRACK `Covers:` ID to its required FR and AC in the SPEC, then to the evidence and the final satisfaction state. Judge each criterion across all entries, rather than trusting a task's final adjective.
 
+Use SNAPSHOT coverage pointers to locate entries, including corrections and unresolved items in sealed segments; inspect the source evidence before classifying. Missing or incomplete pointers require searching TRACK, never assuming satisfaction or absence of a gap.
+
 ```text
 AC-001  satisfied     verified    integration test passed
 AC-002  satisfied     attested    user confirmed the accepted invitations

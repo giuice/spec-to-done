@@ -103,11 +103,13 @@ SPEC.md        contrato do resultado
 PLAN.md        trabalho futuro
 TRACK.md       evidência append-only da execução (segmento ativo)
 track/         segmentos selados do TRACK, um por fase concluída
-SNAPSHOT.md    estado atual em uma página, reescrito a cada gate; ponto de retomada
+SNAPSHOT.md    estado atual compacto e referências às evidências; ponto de retomada
 REPORT.md      resultado final apresentado ao desenvolvedor
 ```
 
 Como o estado vive nesses artefatos, e não apenas na conversa, o trabalho sobrevive a interrupções, limites de contexto e novas sessões sem reconstruir o progresso pela memória.
+
+O snapshot mantém decisões que afetam o trabalho restante, pendências e referências ao TRACK. Cada gate o atualiza a partir do snapshot válido anterior e dos novos registros; decisões saem apenas com motivo registrado, e pendências exigem resolução explícita. Uma página é uma meta, nunca motivo para apagar fatos materiais. O TRACK continua sendo a fonte de verdade; o PLAN mantém o maior ID de tarefa reservado para evitar reutilização entre fases.
 
 ### Um trabalho ativo por vez
 
