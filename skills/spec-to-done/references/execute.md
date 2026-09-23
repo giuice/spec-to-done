@@ -39,7 +39,13 @@ Pick per task, in this order:
 ## The loop
 
 ```
-read contract + PLAN + TRACK
+read contract + PLAN + available SNAPSHOT + active TRACK
+   |
+   v
+reconcile interruptions (sealed entries only as needed; see Resuming)
+   |
+   v
+seal if due; persist current SNAPSHOT
    |
    v
 select next task ---- none left ----> invoke references/report.md
@@ -57,9 +63,15 @@ verify against observable state               |   <-- you do this, not the perfo
 append track entry <-------------------------+
    |
    v
-replan gate ---- plan still true ----> next task
-   |
-   +-- plan invalid --> invoke references/plan.md in replan mode
+replan gate (with ID reservation)
+   +-- plan holds --> references/plan.md: maintenance --+
+   +-- invalid ----> references/plan.md: replan --------+--> reconcile gate/PLAN
+   +-- terminal --------------------------------------+          |
+                                                                 v
+                                          seal if due; persist SNAPSHOT
+                                                                 |
+                                                                 v
+                                                    next task or report
 
 Every path reaches the track and then the gate. No status skips either.
 ```
@@ -181,6 +193,7 @@ State delta:
 Evidence:
 - integration test PaymentTimeoutTests → passed
 Verification: verified
+Highest task ID reserved: T2
 Gate: plan holds
 
 ## T2 — Product endpoint cache  [partial]
@@ -201,11 +214,13 @@ Risk:
 - The reporting job may read stale data until invalidation is added.
 Deviation: TTL set to 60s rather than the planned 300s, because the reporting job
 tolerates at most one minute of staleness.
+Highest task ID reserved: T2
 Gate: replan required
 
 ### Replan checkpoint — T2
 Previous plan version: 1
 New plan version: 2
+Highest task ID reserved: T3
 Gate: replan done
 ```
 
@@ -237,17 +252,19 @@ TRACK rules:
 
 | Status | TRACK | Then |
 |---|---|---|
-| `done` | record with verification label | replan gate → next task |
-| `no_op` | record with the evidence that it was already true | replan gate → next task |
+| `done` | record with verification label | replan gate → maintain or replan → finish checkpoint |
+| `no_op` | record with the evidence that it was already true | replan gate → maintain or replan → finish checkpoint |
 | `partial` | record, with `Unresolved` filled | replan gate **must** run — the remainder needs a new task |
-| `blocked` | record, with the blocker and any `user_action` | replan gate **must** run; if it cannot route around it → report |
+| `blocked` | record, with the blocker and any `user_action` | replan gate **must** run; if it cannot route around it → finish checkpoint → report |
 | `failed` | record, with the discrepancy | replan gate **must** run |
+
+Every gate route finishes its checkpoint before the next task or report: reconcile gate/PLAN, seal if due, then persist SNAPSHOT. Partial and failed tasks require replanning or an honest terminal route, never redispatch.
 
 ### 7. Replan gate
 
 Run this after **every** task, without exception. It is a checkpoint, not a rewrite: most gates should pass without a replan.
 
-Include `Highest task ID reserved` in the TRACK gate checkpoint before PLAN maintenance or replanning: retain the maximum from PLAN metadata, its task IDs, and the previous reservation checkpoint. Recover missing reservation metadata as specified in `references/plan.md`.
+Include `Highest task ID reserved` with the task's inline gate (or named recovery checkpoint) before PLAN maintenance or replanning: retain the maximum from PLAN metadata, its task IDs, and the previous reservation checkpoint. Recover missing reservation metadata as specified in `references/plan.md`.
 
 Ask: *is the remaining plan still true, given what is now known?*
 
@@ -266,6 +283,8 @@ Invoke `references/plan.md` in replan mode when any of these holds:
 ```
 
 Otherwise set `Gate: plan holds` and invoke `references/plan.md` for future-only maintenance before continuing. Maintenance removes the completed task from PLAN, keeps the plan version unchanged, and appends no checkpoint. A PLAN that still lists an attempted or completed task ID is not a plan that holds.
+
+After replanning, append the task-named outcome checkpoint with the resulting plan version and ID reservation. Finish the checkpoint as defined above; do not dispatch between gate/PLAN reconciliation and SNAPSHOT persistence.
 
 **Unconfirmed discoveries never redraw the strategy.** If a `[reported, unconfirmed]` fact would invalidate later tasks, confirm it first; if confirming it takes real work, the only replan it may drive is one that adds a validation task. The strategy rewrite waits for that task's verified result.
 
@@ -316,12 +335,13 @@ Highest task ID reserved: T<n>
 Open lineages: <root> (<attempts used>/3, Blocker: BLK-<slug>-<root> or none), ...
 ```
 
-- Seal only immediately after a gate checkpoint, never between a task record and its gate.
+- Seal only after the task's gate and PLAN have been reconciled (maintenance or recorded replan outcome), never while a gate or replan is pending.
+- `Segment opened` is not a task gate. To recover the latest task's effective gate, inspect its last associated gate event; if absent from the active file, follow `Sealed` into the preceding segment, continuing backward as needed. No global gate is introduced.
 - Sealing moves bytes; it never rewrites, reorders, or summarizes them. A sealed segment is never edited again.
 - Task IDs stay unique across all segments.
 - Read a sealed segment only for a specific entry you need; do not reread the whole record to resume.
 
-**Snapshot.** `SNAPSHOT.md` is a short view of the current state. Rewrite it in full after every gate checkpoint — it is the one execution artifact that is replaced rather than appended:
+**Snapshot.** `SNAPSHOT.md` is a short view of the current state. Persist it after reconciling the task record, gate, and PLAN, and after any sealing — before the next dispatch or report. It is the one execution artifact replaced rather than appended:
 
 ```markdown
 # SNAPSHOT: <slug>
@@ -347,21 +367,25 @@ Updated after: <TRACK file + entry heading> (plan version N)
 ```
 
 - SNAPSHOT is derived. TRACK wins every disagreement; SNAPSHOT holds no evidence and no history, only the current state and pointers to the TRACK entries that record it.
-- Write it after the task record and its gate, never instead of them.
+- Read an available snapshot as an aid during reconciliation; never persist it instead of, or ahead of, the task record, gate, and PLAN reconciliation.
 - Update from the last valid snapshot plus subsequent TRACK entries; reread older entries only to resolve a specific gap or conflict. A snapshot is stale when `Updated after` differs from the last TRACK entry or current PLAN version. Reconcile it before dispatch; rebuild from the whole record only if missing, inconsistent, or its source checkpoint cannot be found. After sealing, update pointers to the sealed file.
 - At each gate, retain decisions that constrain remaining tasks or verification, even if already implemented. Remove one only with a TRACK-recorded reason: superseded, condition verified and no longer needed, no remaining task or check affected, or preserved in a document the workflow must read before acting. Keep uncertain cases; never remove their history.
 - Carry unresolved items until TRACK explicitly resolves or supersedes them; a phase boundary or lack of a blocker is not resolution. Keep unverified assumptions labelled, never promote them to facts.
 - Aim for one page: one line per item, omit empty sections, reference SPEC and PLAN instead of duplicating them, and leave rationale and evidence in TRACK. Group coverage pointers where possible; preserve material state even when it exceeds one page. Pointers locate evidence; they do not establish satisfaction.
 
-**Migration.** A TRACK written before this rule has no segments. At its next gate checkpoint, seal it: cut only at gate-checkpoint boundaries into consecutive segments, one per completed phase, so that their concatenation is byte-identical to the original file; open a new segment with the checkpoint above; build `SNAPSHOT.md` from the whole record once.
+**Migration.** A TRACK written before this rule has no segments. After its next reconciled gate/PLAN, seal it unchanged (phase boundaries are optional); open a new segment with the checkpoint above and build `SNAPSHOT.md` from the whole record once.
 
 ---
 
 ## Resuming
 
-`SNAPSHOT.md` and the active `TRACK.md` segment are the resume point. On restart, read the contract, `PLAN.md`, `SNAPSHOT.md`, and the active segment; open a sealed segment only for an entry the reconciliation needs, and rebuild a missing or stale snapshot first. Then reconcile each interruption window without changing any existing entry: execution-to-TRACK uses the step 2 pre-dispatch state check before recording; TRACK-to-gate appends a missing checkpoint for the recorded task; gate-to-PLAN compares the last checkpoint's plan version and gate before any continuation is created. If `replan required` has a higher `PLAN.md` version, append `replan done (plan version N)`; at the same version invoke the replanner. Never dispatch a recorded task ID.
+Read the contract, PLAN, available SNAPSHOT, and active TRACK; consult sealed entries only as needed. Reconcile before persisting the snapshot:
 
-If the last checkpoint says `replan exhausted`, it is terminal until resolution of its `Blocker: BLK-<slug>-<root-task-id>` is verified by ordinary inspection or explicitly attested by the user. The evidence must match that stable blocker identity. Append the resolution evidence and a reopening checkpoint, invoke the replanner, and start a same-SPEC new `Reopens:` episode under the same `Root:`; preserve all earlier entries and retain the exhausted lineage as historical evidence.
+1. **Interrupted sealing:** if TRACK is absent after the move, locate the latest numbered sealed segment and create the opening entry from it and PLAN. If an opening entry is incomplete, preserve it and append a complete one. Do not move the sealed record again. Ambiguous or conflicting files require resolution, not a guessed history.
+2. **Task/gate/PLAN:** locate the latest task and its effective gate, ignoring segment-opening markers. Execution-to-TRACK uses step 2's side-effect check before recording; TRACK-to-gate appends a task-named missing gate with ID reservation, without redispatch. For `plan holds`, finish PLAN maintenance. For `replan required`, if the higher PLAN version already contains that task's valid future-only replan, append its missing `replan done (plan version N)` checkpoint; at the same version invoke the replanner. Preserve IDs, lineage, and all existing entries; conflicting versions require resolution before continuation.
+3. **Resume state:** after reconciliation, finish any due sealing, then persist SNAPSHOT using the incremental/full-rebuild distinction above. An outdated pointer to moved TRACK content is resolved in its sealed segment. Never dispatch a recorded task ID.
+
+If the effective task gate says `replan exhausted`, it is terminal until resolution of its `Blocker: BLK-<slug>-<root-task-id>` is verified by ordinary inspection or explicitly attested by the user. The evidence must match that stable blocker identity. Append the resolution evidence and a reopening checkpoint, invoke the replanner, and start a same-SPEC new `Reopens:` episode under the same `Root:`; preserve all earlier entries and retain the exhausted lineage as historical evidence.
 
 Do not re-run completed tasks. Re-verify a completed task only when a later discovery may have invalidated its postcondition.
 
