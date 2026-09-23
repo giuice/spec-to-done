@@ -38,8 +38,11 @@ Pick per task, in this order:
 
 ## The loop
 
+With no execution history in active or sealed TRACK segments, skip recovery and initial SNAPSHOT persistence: select the first task and create the first snapshot only after its task checkpoint and PLAN are reconciled. The pre-dispatch side-effect check still applies.
+
 ```
-read contract + PLAN + available SNAPSHOT + active TRACK
+read contract + PLAN + available SNAPSHOT/TRACK
+   +-- no execution history --> select next task
    |
    v
 reconcile interruptions (sealed entries only as needed; see Resuming)
@@ -379,7 +382,7 @@ Updated after: <TRACK file + entry heading> (plan version N)
 
 ## Resuming
 
-Read the contract, PLAN, available SNAPSHOT, and active TRACK; consult sealed entries only as needed. Reconcile before persisting the snapshot:
+When execution history exists, read the contract, PLAN, available SNAPSHOT, and active TRACK; consult sealed entries only as needed. Reconcile before persisting the snapshot:
 
 1. **Interrupted sealing:** if TRACK is absent after the move, locate the latest numbered sealed segment and create the opening entry from it and PLAN. If an opening entry is incomplete, preserve it and append a complete one. Do not move the sealed record again. Ambiguous or conflicting files require resolution, not a guessed history.
 2. **Task/gate/PLAN:** locate the latest task and its effective gate, ignoring segment-opening markers. Execution-to-TRACK uses step 2's side-effect check before recording; TRACK-to-gate appends a task-named missing gate with ID reservation, without redispatch. For `plan holds`, finish PLAN maintenance. For `replan required`, if the higher PLAN version already contains that task's valid future-only replan, append its missing `replan done (plan version N)` checkpoint; at the same version invoke the replanner. Preserve IDs, lineage, and all existing entries; conflicting versions require resolution before continuation.
