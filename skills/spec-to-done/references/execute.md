@@ -16,7 +16,9 @@ This skill is domain-neutral: it executes code work, research, writing, operatio
 spec-interview/<slug>/
   SPEC.md      the contract      (mandatory; read-only here)
   PLAN.md      the strategy      (read; replaced by references/plan.md)
-  TRACK.md    the record        (you are the only writer)
+  TRACK.md    the record        (you are the only writer; active segment)
+  track/      sealed segments   (read only for a specific entry)
+  SNAPSHOT.md current state     (you are the only writer; rewritten at every gate)
   REPORT.md    written by references/report.md
 ```
 
@@ -298,9 +300,57 @@ Report the state through `references/report.md` rather than improvising a new ob
 
 ---
 
+## Track segments and the snapshot
+
+On a long run the record outgrows a single read. Two rules keep resuming cheap without weakening the record.
+
+**Segments.** The execution record is the concatenation, in order, of the sealed segments under `spec-interview/<slug>/track/` and the active `TRACK.md`. Wherever this workflow says TRACK, it means that whole record. Seal the active segment at a phase or milestone boundary of the plan, or whenever it no longer fits in a single read: move it unchanged to `track/TRACK-<nn>-<label>.md` (`nn` is a two-digit sequence, `label` names the phase), then start a new `TRACK.md` whose first entry is a segment checkpoint:
+
+```markdown
+### Segment opened — <label>
+Sealed: track/TRACK-<nn>-<label>.md
+Plan version: N
+Open lineages: <root> (<attempts used>/3, Blocker: BLK-<slug>-<root> or none), ...
+```
+
+- Seal only immediately after a gate checkpoint, never between a task record and its gate.
+- Sealing moves bytes; it never rewrites, reorders, or summarizes them. A sealed segment is never edited again.
+- Task IDs stay unique across all segments.
+- Read a sealed segment only for a specific entry you need; do not reread the whole record to resume.
+
+**Snapshot.** `SNAPSHOT.md` is a short view of the current state. Rewrite it in full after every gate checkpoint — it is the one execution artifact that is replaced rather than appended:
+
+```markdown
+# SNAPSHOT: <slug>
+Updated after: <heading of the last TRACK entry> (plan version N)
+
+## Deliverables
+- <path> — <current version or state> — <accepted | in review | rework | not started>
+
+## Open lineages
+- Root <id>: attempt <n>/3, last status <status>, blocker <BLK-... | none>
+
+## Blockers
+- BLK-<slug>-<root>: <what is blocked> — resolution task <id> — resolution verified: yes | no
+
+## Decisions in force
+- <decision not yet reflected in the deliverables> — recorded in <TRACK entry heading>
+
+## Next
+- <next task IDs in PLAN order>
+```
+
+- SNAPSHOT is derived. TRACK wins every disagreement; SNAPSHOT holds no evidence and no history, only the current state and pointers to the TRACK entries that record it.
+- Write it after the task record and its gate, never instead of them.
+- If it is missing, or its `Updated after` line does not name the last TRACK entry, rebuild it from the record before any dispatch.
+
+**Migration.** A TRACK written before this rule has no segments. At its next gate checkpoint, seal it: cut only at gate-checkpoint boundaries into consecutive segments, one per completed phase, so that their concatenation is byte-identical to the original file; open a new segment with the checkpoint above; build `SNAPSHOT.md` from the whole record once.
+
+---
+
 ## Resuming
 
-`TRACK.md` is the resume point. On restart, read the contract, `PLAN.md`, and `TRACK.md`. First reconcile each interruption window without changing any existing entry: execution-to-TRACK uses the step 2 pre-dispatch state check before recording; TRACK-to-gate appends a missing checkpoint for the recorded task; gate-to-PLAN compares the last checkpoint's plan version and gate before any continuation is created. If `replan required` has a higher `PLAN.md` version, append `replan done (plan version N)`; at the same version invoke the replanner. Never dispatch a recorded task ID.
+`SNAPSHOT.md` and the active `TRACK.md` segment are the resume point. On restart, read the contract, `PLAN.md`, `SNAPSHOT.md`, and the active segment; open a sealed segment only for an entry the reconciliation needs, and rebuild a missing or stale snapshot first. Then reconcile each interruption window without changing any existing entry: execution-to-TRACK uses the step 2 pre-dispatch state check before recording; TRACK-to-gate appends a missing checkpoint for the recorded task; gate-to-PLAN compares the last checkpoint's plan version and gate before any continuation is created. If `replan required` has a higher `PLAN.md` version, append `replan done (plan version N)`; at the same version invoke the replanner. Never dispatch a recorded task ID.
 
 If the last checkpoint says `replan exhausted`, it is terminal until resolution of its `Blocker: BLK-<slug>-<root-task-id>` is verified by ordinary inspection or explicitly attested by the user. The evidence must match that stable blocker identity. Append the resolution evidence and a reopening checkpoint, invoke the replanner, and start a same-SPEC new `Reopens:` episode under the same `Root:`; preserve all earlier entries and retain the exhausted lineage as historical evidence.
 

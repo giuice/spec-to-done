@@ -101,7 +101,9 @@ state.md       lifecycle status, interview answers, coverage, and the readiness 
 round-N.html   a generated interview round (only when the host UI cannot carry it)
 SPEC.md        the outcome contract
 PLAN.md        future work
-TRACK.md       append-only execution evidence and resume state
+TRACK.md       append-only execution evidence (active segment)
+track/         sealed TRACK segments, one per completed phase
+SNAPSHOT.md    one-page current state, rewritten at every gate; the resume point
 REPORT.md      the final developer-facing result
 ```
 

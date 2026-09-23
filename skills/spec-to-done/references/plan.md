@@ -11,7 +11,7 @@ One work item lives in `spec-interview/<slug>/`:
 ```text
 SPEC.md       the contract; mandatory and read-only to planning
 PLAN.md       the actionable future strategy; written or maintained here
-TRACK.md      append-only execution history; input only during a replan
+TRACK.md      append-only execution history (plus sealed segments in track/); input only during a replan
 REPORT.md     terminal communication; owned by reporting
 ```
 
@@ -125,7 +125,7 @@ Depends on: T1
 
 Field rules:
 
-- IDs are stable and never reused. A surviving task retains its ID across plan versions; a new task takes the next unused number from PLAN and TRACK. IDs attached to completed or attempted work are historical and cannot be recycled.
+- IDs are stable and never reused. A surviving task retains its ID across plan versions; a new task takes the next unused number from PLAN and every TRACK segment. IDs attached to completed or attempted work are historical and cannot be recycled.
 - `Covers:` is mandatory on every task and maps to requirement and acceptance-criterion IDs that exist in the SPEC. Every Must-priority requirement and every acceptance criterion must be covered by TRACK `done`/`no_op` entries plus remaining PLAN tasks.
 - `Root:` is mandatory on every task and names the origin of its lineage. A task that starts one names itself; a continuation or a reopening carries the root's ID unchanged, however long the lineage grows. It is unconditional so that `TRACK.md` stays append-only: a root entry is written before anyone knows a continuation will exist, and it can never be edited afterwards to add the field.
 - `Continues:` appears only on a replan task that plans the remainder of one `partial`, `blocked`, or `failed` task, and names that **immediate** attempted predecessor, not the root.
@@ -164,7 +164,7 @@ This deterministic maintenance is required even when no future work changes: com
 
 Enter replan mode only from the execution checkpoint when verified feedback makes future strategy false or incomplete, or when a `replan exhausted` run is reopened after the executor verifies or obtains user attestation that its blocker is resolved. Merely reaching the end of a successful task is not a replan trigger.
 
-Inputs are the immutable SPEC, the current PLAN, the append-only TRACK, and current observed state.
+Inputs are the immutable SPEC, the current PLAN, the append-only TRACK, and current observed state. TRACK means the whole record: the sealed segments under `track/` in order, then the active `TRACK.md`; `SNAPSHOT.md` points to the entries that matter now.
 
 ### Reflect first
 

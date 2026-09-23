@@ -11,7 +11,7 @@ Own **SPECIFY → PLAN → EXECUTE ↔ REPLAN → REPORT** using only this tree.
 
 ## Artifact-first lookup and boundary
 
-Derive a kebab-case slug and inspect `spec-interview/<slug>/` first. SPEC, state, rounds, PLAN, TRACK, and REPORT belong only under that directory—never at the workspace root. Product deliverables stay at their contract paths. Match stored Goal, SPEC summary, or interview restatement to the actual request, not just the slug. A different goal receives a distinct folder; uncertain identity needs the smallest decision. Preserve malformed, premature, partial, and conflicting evidence—never delete, overwrite, or silently repair it.
+Derive a kebab-case slug and inspect `spec-interview/<slug>/` first. SPEC, state, rounds, PLAN, TRACK (with its sealed `track/` segments), SNAPSHOT, and REPORT belong only under that directory—never at the workspace root. Product deliverables stay at their contract paths. Match stored Goal, SPEC summary, or interview restatement to the actual request, not just the slug. A different goal receives a distinct folder; uncertain identity needs the smallest decision. Preserve malformed, premature, partial, and conflicting evidence—never delete, overwrite, or silently repair it.
 Each work's `state.md` opens with `Status: active | frozen | closed`: at most one `active` repository-wide, `frozen` preserved as documentation only, `closed` terminal after its report.
 The root writes this line on entry and updates it on terminal exit; naming a `frozen` or `closed` work makes it `active` and freezes the previously active one, stated rather than assumed.
 
@@ -40,7 +40,7 @@ A detailed handoff is not a Ready SPEC. Completion follows through the reporter,
 
 ## Continuation and safety
 
-After every selected reference return here and route again. Execute reads the local plan reference for replanning and the local report reference for every terminal route; both are internal continuation, not cross-skill handoff. TRACK is the sole execution record and its task records, corrections, and gate checkpoints are append-only. Before a destructive or irreversible action, preserve evidence, ask for authority, and report the blocker rather than proceeding.
+After every selected reference return here and route again. Execute reads the local plan reference for replanning and the local report reference for every terminal route; both are internal continuation, not cross-skill handoff. TRACK — its sealed segments plus the active file — is the sole execution record and its task records, corrections, and gate checkpoints are append-only; `SNAPSHOT.md` is a derived current-state view rewritten at every gate, and TRACK wins any disagreement. Before a destructive or irreversible action, preserve evidence, ask for authority, and report the blocker rather than proceeding.
 
 On a terminal route, treat the report body as a single immutable output: persist it after the `REPORT.md` header, then emit that exact body byte-for-byte as the developer response. Do not reconstruct, paraphrase, prefix, suffix, or replace it with routing, execution, or validation narration.
 

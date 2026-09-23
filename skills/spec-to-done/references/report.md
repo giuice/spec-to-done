@@ -21,7 +21,7 @@ Always produce exactly one of `COMPLETED`, `PARTIAL`, `BLOCKED`, `FAILED`, or `N
 Read `spec-interview/<slug>/`:
 
 - **Contract:** `SPEC.md`, always. Every Must-priority requirement and every acceptance criterion in it is a mandatory completion gate. `PLAN.md` and `TRACK.md` record how the contract was pursued; neither is ever the contract.
-- **TRACK.md:** the append-only history of task status, coverage, state delta, evidence, verification, unresolved work, risk, user action, deviation, assumptions, and checkpoints.
+- **TRACK.md:** the whole record — the sealed segments under `track/` in order, then the active `TRACK.md` — holding the append-only history of task status, coverage, state delta, evidence, verification, unresolved work, risk, user action, deviation, assumptions, and checkpoints.
 - **PLAN.md:** the goal statement, remaining tasks, no-op declaration, and criteria with no TRACK entry.
 
 Without TRACK, reconstruct material facts only from observations that actually happened. Never reconstruct the requested goal from an execution trace and never invent evidence, history, or a success claim.

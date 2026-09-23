@@ -101,7 +101,9 @@ state.md       status de ciclo de vida, respostas da entrevista, cobertura e gat
 round-N.html   uma rodada de entrevista gerada (só quando a UI do host não comporta)
 SPEC.md        contrato do resultado
 PLAN.md        trabalho futuro
-TRACK.md       evidência append-only da execução e estado de retomada
+TRACK.md       evidência append-only da execução (segmento ativo)
+track/         segmentos selados do TRACK, um por fase concluída
+SNAPSHOT.md    estado atual em uma página, reescrito a cada gate; ponto de retomada
 REPORT.md      resultado final apresentado ao desenvolvedor
 ```
 
