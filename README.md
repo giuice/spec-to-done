@@ -22,7 +22,7 @@ Planning modes are genuinely useful, but on longer work the failure happens afte
 - the plan contains future work only;
 - every task carries an observable `Done when` condition and is verified independently of whoever performed it;
 - execution evidence is appended to a durable track instead of living in the conversation;
-- after every task a replan gate asks whether the remaining plan is still true;
+- after every task a replan gate considers strategy corrections and discoveries that make valid future tasks more precise;
 - replanning may change future work, but it cannot silently weaken the agreed outcome.
 
 ## Install
@@ -109,7 +109,11 @@ REPORT.md      the final developer-facing result
 
 Because the state lives in these artifacts instead of only in the conversation, the work can survive interruptions, context limits, and a new session without reconstructing progress from memory.
 
+Maintenance runs even without refinement. It may clarify `Reasoning`, concrete `Task` parameters and `Verify by` details, preserving task identity, required work, acceptance, coverage, dependencies and verification strength. Superseded details are replaced rather than accumulated. The existing TRACK discovery records the concrete consequence and affected task IDs; it does not archive the exact dispatch brief. Refinement changes no strategy version or checkpoint count. Changes outside these bounds require replanning; `partial`, `blocked` and `failed` retain their existing routes. This refinement is implemented but has not been behaviorally evaluated.
+
 The snapshot carries decisions affecting remaining work, unresolved gaps, and pointers into TRACK. Reconcile the task record, gate, and PLAN first; seal a segment if due, then persist the snapshot from its previous valid state and new entries. Segment openings never replace task gates. Decisions leave only with a recorded reason, and gaps require explicit resolution. One page is a target, never a reason to drop material facts. TRACK remains authoritative; PLAN retains the highest reserved task ID to avoid recycling IDs across phases.
+
+At each reconciled checkpoint, rotate the whole active TRACK at 80,000 bytes or an explicit phase/milestone closure; phases remain optional. Verify preserved bytes and the new opening before continuing. PLAN replaces its current replan reason instead of accumulating past triggers. SNAPSHOT replaces changed states rather than accumulating a task chronology; blocker state lives in one section, and contradictions require reconciliation even when its checkpoint pointer is current. Bulky evidence may use a preserved report/version without a mandatory review file, while material consequences remain visible to the replan gate. The 80,000-byte threshold is an initial calibration value, not a model context guarantee. Replanning frequency, `partial` handling and attempt limits are unchanged.
 
 ### One active work at a time
 

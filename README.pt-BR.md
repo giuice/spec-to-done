@@ -22,7 +22,7 @@ Modos de planejamento são realmente úteis, mas em trabalhos longos a falha aco
 - o plano contém apenas trabalho futuro;
 - cada tarefa carrega uma condição observável de `Done when` e é verificada de forma independente de quem a executou;
 - a evidência de execução é registrada em um track durável, em vez de viver na conversa;
-- depois de cada tarefa, um gate de replanejamento pergunta se o plano restante ainda é verdadeiro;
+- depois de cada tarefa, um gate de replanejamento considera correções de estratégia e descobertas que tornem tarefas futuras válidas mais precisas;
 - replanejar pode mudar o trabalho futuro, mas não pode enfraquecer silenciosamente o resultado combinado.
 
 ## Instalação
@@ -109,7 +109,11 @@ REPORT.md      resultado final apresentado ao desenvolvedor
 
 Como o estado vive nesses artefatos, e não apenas na conversa, o trabalho sobrevive a interrupções, limites de contexto e novas sessões sem reconstruir o progresso pela memória.
 
+A manutenção roda mesmo sem refinamentos. Pode esclarecer `Reasoning`, parâmetros concretos de `Task` e detalhes de `Verify by`, preservando identidade, trabalho exigido, critérios de conclusão, cobertura, dependências e rigor da verificação. Detalhes superados são substituídos, sem acumulação. O registro de descoberta já existente no TRACK inclui a consequência concreta e os IDs afetados; não arquiva o brief exato enviado ao executor. O refinamento não muda a versão da estratégia nem acrescenta checkpoints. Mudanças fora desses limites exigem replanejamento; `partial`, `blocked` e `failed` mantêm os caminhos existentes. Esse refinamento está implementado, mas ainda não foi avaliado em execução com modelos.
+
 O snapshot mantém decisões que afetam o trabalho restante, pendências e referências ao TRACK. Primeiro reconcilie o registro da tarefa, o gate e o PLAN; sele um segmento quando necessário e então persista o snapshot a partir do estado válido anterior e dos novos registros. Aberturas de segmento nunca substituem gates de tarefas. Decisões saem apenas com motivo registrado, e pendências exigem resolução explícita. Uma página é uma meta, nunca motivo para apagar fatos materiais. O TRACK continua sendo a fonte de verdade; o PLAN mantém o maior ID de tarefa reservado para evitar reutilização entre fases.
+
+Em cada checkpoint reconciliado, rotacione o TRACK ativo inteiro ao atingir 80.000 bytes ou um encerramento explícito de fase/marco; fases continuam opcionais. Confira os bytes preservados e a nova abertura antes de continuar. O PLAN substitui o motivo atual de replanejamento, sem acumular gatilhos anteriores. O SNAPSHOT substitui estados alterados, sem acumular uma cronologia de tarefas; o estado de cada bloqueador fica em uma seção, e contradições exigem reconciliação mesmo com referência de checkpoint atual. Evidências extensas podem apontar para um relatório/versão preservado, sem arquivo de revisão obrigatório, mantendo consequências materiais visíveis ao gate de replanejamento. O limiar de 80.000 bytes é um valor inicial para calibração, não uma garantia de contexto do modelo. Frequência do replanning, tratamento de `partial` e limites de tentativas permanecem iguais.
 
 ### Um trabalho ativo por vez
 

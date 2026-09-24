@@ -141,7 +141,7 @@ Field rules:
 ```
 
 - `Depends on:` lists prerequisite task IDs; use `—` when none. Place every prerequisite before its dependent and keep the dependency graph acyclic.
-- `Plan version` labels the strategy used for TRACK entries. PLAN is not an archive: it contains only actionable future work. TRACK preserves completed and attempted history.
+- `Plan version` labels the strategy used for TRACK entries. PLAN is not an archive: it contains only actionable future work. On a strategy change, replace `Replanned because` with the current trigger; never extend it with previous triggers. Their history belongs in TRACK. Retain verified facts and constraints that surviving tasks need.
 
 ## Initial planning
 
@@ -157,15 +157,15 @@ Planning stops at the written strategy and returns control to the composite root
 
 ## Checkpoint maintenance without a strategy replan
 
-Every execution checkpoint distinguishes maintenance from replanning. When verified feedback leaves the remaining strategy valid, do not regenerate it or increment `Plan version`. The executor records the completed or no-op task in TRACK; maintenance removes that now-completed task from actionable PLAN, leaves surviving task IDs and dependencies unchanged, and preserves the same plan version. Its coverage remains satisfied through TRACK.
+Every execution checkpoint distinguishes maintenance from replanning. Maintenance is mandatory after every gate that keeps the strategy, even when no refinement is needed. When verified feedback leaves the remaining strategy valid, do not regenerate it or increment `Plan version`. The executor records the completed or no-op task in TRACK; maintenance removes that now-completed task from actionable PLAN, leaves surviving task IDs and dependencies unchanged, and preserves the same plan version. Its coverage remains satisfied through TRACK.
 
-This deterministic maintenance is required even when no future work changes: completed work must not remain in PLAN, and an unchanged feedback checkpoint is not a pretext for needless strategy churn.
+During maintenance, incorporate verified discoveries when they remove an uncertainty or make execution or verification more precise. Refine only `Reasoning`, concrete parameters or placeholders in `Task`, and details of `Verify by`. Preserve ID, `Root`, `Done when`, `Covers`, `Depends on` and any `Continues` or `Reopens`. Refinement clarifies how to fulfill and verify the already-planned result; it must not change the required work or weaken verification. Changes beyond these bounds require replanning. Use the discovery, concrete consequence and affected task IDs already recorded by the executor in TRACK; put only actionable detail in PLAN. Replace superseded detail rather than accumulating explanations or history. Refinement alone changes no plan version and adds no checkpoint. If no useful detail was learned, leave surviving text unchanged.
 
 ## Replanning only after material divergence
 
 Enter replan mode only from the execution checkpoint when verified feedback makes future strategy false or incomplete, or when a `replan exhausted` run is reopened after the executor verifies or obtains user attestation that its blocker is resolved. Merely reaching the end of a successful task is not a replan trigger.
 
-Inputs are the immutable SPEC, the current PLAN, the append-only TRACK, and current observed state. TRACK means the whole record: the sealed segments under `track/` in order, then the active `TRACK.md`; `SNAPSHOT.md` points to the entries that matter now.
+Inputs are the immutable SPEC, the current PLAN, the append-only TRACK, and current observed state. TRACK means the whole record: the sealed segments under `track/` in order, then the active `TRACK.md`; `SNAPSHOT.md` points to the entries that matter now. Follow relevant pointers, including preserved external evidence, before deciding; a segment boundary or read-size target never limits the facts available to replanning.
 
 ### Reflect first
 
@@ -180,7 +180,7 @@ Only TRACK discoveries marked verified may become task premises. An unconfirmed 
 ### Then regenerate only invalid future work
 
 1. Identify remaining tasks that still hold and those invalidated by current verified state.
-2. Remove work that is no longer needed; retain valid surviving tasks unchanged, including their IDs.
+2. Remove work that is no longer needed; retain valid surviving tasks and their IDs, incorporating useful verified details under the maintenance refinement rule above.
 3. Add the smallest necessary future outcomes, using concrete discovered facts rather than old placeholders.
 4. Replace every attempted instruction with a new ID for its remainder. An attempted task never survives in PLAN, even if some of its work remains.
 5. Repoint each surviving dependency that named a replaced task to the new task, or drop it only when the already-completed portion satisfies the prerequisite. No dependency may name an attempted (`partial`, `blocked`, or `failed`) TRACK task because it can never become a satisfiable prerequisite.
@@ -213,7 +213,7 @@ Run this before writing an initial plan, a materially replanned plan, or checkpo
 - Every task carries Root, and Root is unchanged across every task in one lineage: Pass / Missing
 - Surviving IDs remain stable and dependencies are repointed away from attempted tasks: Pass / Missing / N/A
 - Success criteria are unchanged from the SPEC (replan only): Pass / Missing / N/A
-- No strategy version changed for unchanged feedback; only completed work was removed (maintenance only): Pass / Missing / N/A
+- No strategy version changed during maintenance; completed work was removed and verified refinements stay within the permitted fields, preserve required work and do not weaken verification: Pass / Missing / N/A
 
 Verdict: Ready / Not ready
 ```
@@ -234,7 +234,7 @@ Coverage is always evaluated against TRACK plus remaining PLAN, never PLAN alone
 
 **Broken dependencies.** Leaving a dependency aimed at an attempted task deadlocks execution; repoint it to the new remainder or remove it only when already-satisfied state permits.
 
-**Checkpoint churn.** Incrementing a plan version when feedback did not invalidate future strategy obscures history and violates deterministic maintenance.
+**Checkpoint churn.** Incrementing a plan version solely to remove completed work or incorporate verified detail obscures strategy history. Maintenance may refine valid future tasks without regenerating the strategy.
 
 **Silent scope drift.** Dropping a hard requirement because it became difficult changes the contract. Escalate it.
 
