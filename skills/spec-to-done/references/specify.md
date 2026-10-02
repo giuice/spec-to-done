@@ -6,11 +6,13 @@ Turn an unclear product idea into a complete, assumption-light Product SPEC. Thi
 
 ## Operating principle
 
-The core job is not writing first; it is discovering what must be true before a useful SPEC can exist. A polished SPEC built on hidden assumptions is worse than no SPEC because it makes uncertainty look settled. Never answer an interview question for the user: extract facts they already supplied, distinguish them from unresolved decisions, and ask about the latter.
+The core job is not writing first; it is discovering what must be true before a useful SPEC can exist. A polished SPEC built on hidden assumptions is worse than no SPEC because it makes uncertainty look settled. Never answer an interview question for the user. Documents or prior context substitute for interview answers only when the user explicitly asks or authorizes it; otherwise use them to inform questions. Record that authorization alongside extracted answers and their source passages in `state.md`.
 
 Every substantial new run uses this stage. The sole bypass is procedural, not qualitative: `spec-interview/<slug>/state.md` already records per-domain coverage and `Verdict: Ready`, which only this stage writes. A supplied document, detailed handoff, filename, prior conversation, or asserted provenance is not proof that a contract is complete.
 
 ## Resume, supplied contract, or new interview
+
+The extraction instructions below apply only with explicit user authorization to use the material as answers. Without it, interview the domains normally and retain the material as context.
 
 Derive a short kebab-case slug and use `spec-interview/<slug>/`. If its `state.md` or prior round files exist, read them first, preserve answered material, and ask only the remaining or newly unlocked questions. If an existing folder belongs to a different goal, choose a distinct slug or ask the user before touching it.
 
@@ -139,6 +141,8 @@ Status: active | frozen | closed
 
 Do not mark a domain `Clear` on generic answers alone. Business rules and edge cases require concrete examples. While any required domain is below `Clear`, generate another round focused only on weak or newly unlocked areas; do not move on.
 
+When all applicable domains appear complete, present the current understanding through the same clickable question UI or HTML fallback and ask whether the user has information or requirements to add or correct. Offer confirmation or additions/corrections with a free-text path. Wait for the response; silence is not approval. Persist it in `state.md`, resolve any additions or corrections through the existing coverage gate, and record confirmation as user approval before declaring readiness. This is a short follow-up round, not an extra approval after writing the SPEC.
+
 ## 4. Apply the hard readiness gate
 
 Before writing or accepting `SPEC.md`, explicitly record this check in `state.md`:
@@ -158,11 +162,12 @@ Before writing or accepting `SPEC.md`, explicitly record this check in `state.md
 - Every mandatory business rule, hard constraint, and must-not-happen condition is validated by at least one acceptance criterion: Pass / Missing
 - Test strategy is defined (code projects only): Pass / Missing / N/A
 - Open questions are non-blocking or intentionally deferred: Pass / Missing
+- The user confirmed the current understanding after the additions/corrections question: Pass / Missing
 
 Verdict: Ready / Not ready
 ```
 
-Mark an item `Pass` only when you can cite the specific answer or supplied passage that satisfies it, and record that citation beside the item. An item you cannot cite is `Missing`, however strongly the surrounding material seems to imply it.
+Mark an item `Pass` only when you can cite the specific user answer or explicitly authorized supplied passage that satisfies it, and record that citation beside the item. An item you cannot cite is `Missing`, however strongly the surrounding material seems to imply it.
 
 If any item is `Missing`, the verdict is `Not ready`: run another round instead of drafting or accepting the final SPEC. If the user asks to draft early, decline a final SPEC and offer continued interview, clearly labeled `Discovery Notes` (not a SPEC), or a narrower scope that could pass the gate. Pause only for actual interview answers or another required user decision, authority, credentials, or external action.
 
@@ -296,4 +301,4 @@ If the user is domain-expert, ask sharper business-rule and edge-case questions 
 
 If the user is overwhelmed, keep the round small (3-5 questions) and remind them that they can answer by clicking options and adding a note.
 
-If the user gives a large existing brief, extract what is already answered first, then build the round around the gaps only. It does not bypass the interview.
+If the user gives a large existing brief, use it as context for questions. Only with explicit authorization may it substitute for answers; then build the round around the gaps and the additions/corrections confirmation. It does not bypass the interview.

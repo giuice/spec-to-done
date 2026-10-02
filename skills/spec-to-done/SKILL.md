@@ -1,6 +1,6 @@
 ---
 name: spec-to-done
-description: Use for substantial create, build, implement, launch, redesign, migrate, or end-to-end outcomes and to resume their SPEC-to-REPORT work. Do not use for an explicitly requested single stage or a trivial reversible one-outcome change with no product, migration, data, security, integration, or new failure behavior; when unsure, use this skill.
+description: Use for substantial create, build, implement, launch, redesign, migrate, or end-to-end outcomes and to resume their SPEC-to-REPORT work. For an explicitly requested single stage, satisfy its prerequisites and stop at that stage. Do not use for a trivial reversible one-outcome change with no product, migration, data, security, integration, or new failure behavior; when unsure, use this skill.
 ---
 
 # Spec to Done
@@ -15,11 +15,11 @@ Derive a kebab-case slug and inspect `spec-interview/<slug>/` first. SPEC, state
 Each work's `state.md` opens with `Status: active | frozen | closed`: at most one `active` repository-wide, `frozen` preserved as documentation only, `closed` terminal after its report.
 The root writes this line on entry and updates it on terminal exit; naming a `frozen` or `closed` work makes it `active` and freezes the previously active one, stated rather than assumed.
 
-Every work item governed by this skill requires a Ready SPEC. There is no no-SPEC execution mode. A stage-only request changes the stopping boundary, not the required prerequisites: run every missing predecessor through the requested stage, then stop before the next one, so a plan-only request without a Ready SPEC is `Specify → Plan → stop`. Any substantial new work begins with Specify, including a detailed brief or handoff. A supplied SPEC, PRD, plan, or prior context is interview input, not a contract: Specify is bypassed only when `spec-interview/<slug>/state.md` already records per-domain coverage and `Verdict: Ready`, which only Specify writes. Otherwise extract what it already answers and interview the gaps. Trivial means reversible + one outcome + no product, migration, data, security, integration, or new failure behavior; doubt specifies. For unclear non-product discussion with no checkable outcome, clarify only done, must-not-happen, and constraints; do not force a product interview.
+Every work item governed by this skill requires a Ready SPEC approved by the user. Specify records the user's confirmation of the current understanding in state.md before declaring readiness; approval does not replace the readiness gate. There is no no-SPEC execution mode. A stage-only request changes the stopping boundary, not the required prerequisites: run every missing predecessor through the requested stage, then stop before the next one, so a plan-only request without a Ready SPEC is `Specify → Plan → stop`. Any substantial new work begins with Specify, including a detailed brief or handoff. A supplied SPEC, PRD, plan, or prior context is interview input, not a contract: Specify is bypassed only when `spec-interview/<slug>/state.md` already records per-domain coverage and `Verdict: Ready`, which only Specify writes. Use supplied documents or prior context as interview answers only when the user explicitly asks or authorizes it; otherwise use them to inform questions. Interview the gaps and, if none remain, ask for additions or corrections and wait for the user's confirmation before declaring readiness. Trivial means reversible + one outcome + no product, migration, data, security, integration, or new failure behavior; doubt specifies. For unclear non-product discussion with no checkable outcome, clarify only done, must-not-happen, and constraints; do not force a product interview.
 
 ## Artifact-state routing
 
-Use ordinary inspection of artifacts, timestamps, contents, statuses, and checkpoints. First applicable row wins.
+Use ordinary inspection of artifacts, timestamps, contents, statuses, and checkpoints. First applicable row wins. Plan and execution routes require a Ready SPEC approved by the user; missing readiness or approval returns to Specify with all evidence preserved.
 
 | State | Declared outcome |
 |---|---|
@@ -27,8 +27,8 @@ Use ordinary inspection of artifacts, timestamps, contents, statuses, and checkp
 | Empty substantial work | Read `references/specify.md` completely; specify. |
 | Interview rounds/state without a Ready SPEC | Read `references/specify.md` completely; preserve and resume. |
 | Supplied SPEC/PRD/plan/context without this workflow's `state.md` readiness record | Read `references/specify.md` completely; treat it as interview input and specify. Never route it to Plan on its own strength. |
-| Ready SPEC only | Read `references/plan.md` completely; plan. |
-| SPEC + future PLAN, with or without TRACK | Read `references/execute.md` completely; execute, checkpoint, or replan as state requires. |
+| Ready SPEC approved by the user only | Read `references/plan.md` completely; plan. |
+| Ready SPEC approved by the user + future PLAN, with or without TRACK | Read `references/execute.md` completely; execute, checkpoint, or replan as state requires. |
 | No remaining task / terminal execution state | Read `references/report.md` completely; report. |
 | Current REPORT and unchanged earlier artifacts | Terminal/current: state outcome, do not redo work. |
 | REPORT stale because an earlier artifact or implementation evidence changed | Preserve stale REPORT; select the next active stage from current artifacts. |

@@ -1,5 +1,7 @@
 # spec-to-done
 
+Single-stage requests satisfy missing prerequisites and stop at the requested stage. Documents or prior context substitute for interview answers only with explicit user authorization. Even when the material is complete, Specify asks for additions or corrections and waits for confirmation before recording readiness and user approval.
+
 One Skill that takes substantial work from an unclear request to a verified outcome:
 
 ```text

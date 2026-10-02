@@ -1,5 +1,7 @@
 # spec-to-done
 
+Pedidos de etapa única cumprem os pré-requisitos ausentes e param na etapa solicitada. Documentos ou contexto anterior só substituem respostas da entrevista com autorização explícita do usuário. Mesmo com material completo, Specify pergunta por acréscimos ou correções e aguarda confirmação antes de registrar prontidão e aprovação do usuário.
+
 Uma única Skill que conduz trabalhos substanciais de um pedido ainda incerto até um resultado verificado:
 
 ```text
