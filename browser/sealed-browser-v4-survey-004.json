@@ -1,0 +1,7 @@
+{
+  "status": "failed",
+  "error": "TimeoutError: locator.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Nível total')\u001b[22m\n",
+  "stack": "locator.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByLabel('Nível total')\u001b[22m\n\n    at E:\\projects\\spec-to-done\\evaluation\\rpg-build-arena-level-10-20261016\\judgment\\final-runs\\r-c50ae1c43ce5\\call-003\\browser\\sealed-browser-v4-survey-004.mjs:9:490",
+  "served": [],
+  "errors": []
+}

@@ -158,15 +158,13 @@ The brief deliberately omits the task's `Reasoning` — that is the planner's ju
 
 ### 4. Verify — do not take the performer's word
 
-The performer is not the judge of its own success. Before writing the track, check the postcondition yourself against observable state:
+The performer is not the judge of its own success. Before writing TRACK, independently establish that `Done when` holds now. Run `Verify by` or confirm current evidence that observes the claimed property. Inspect static properties; exercise operations and observe their results for behavior; check persistence after restarting; compare protected content before and after. Reuse suitable checks: a passing check that cannot detect the violation proves nothing.
 
-- Run the `Verify by` check, or confirm the reported evidence is real and current.
-- Confirm the `Done when` condition actually holds now.
-- If `done` was claimed but the postcondition does not hold, record `failed` with the discrepancy. Do not soften it.
+If `done` was claimed but the postcondition does not hold, record `failed` with the discrepancy. Do not soften it.
 
-Extend the same skepticism to `discovered:` items — they become later tasks' input and the replanner's premises. Confirm each one against observable state when a cheap check exists and record it `[verified]`; when you cannot, record it `[reported, unconfirmed]`. An unconfirmed discovery is a hypothesis, not a fact.
+Confirm `discovered:` items against observable state when a cheap check exists and label them `[verified]`; otherwise use `[reported, unconfirmed]`. Unconfirmed discoveries are hypotheses, never established inputs or replanning premises.
 
-Label the verification, because the reporter depends on the distinction:
+Label verification:
 
 | Label | Meaning |
 |---|---|
@@ -174,9 +172,7 @@ Label the verification, because the reporter depends on the distinction:
 | `attested` | A person confirmed it; valid evidence, not machine-checked |
 | `unverified` | No check was possible, or confirmation is still pending |
 
-`attested` is a satisfied criterion. `unverified` is not.
-
-**Never record `done` with `unverified`.** If the postcondition cannot be observed at all, the status is `partial` and the unobservable condition goes in `Unresolved`. Otherwise the executor would call a task finished that the reporter must then downgrade, and the run would end claiming a completion the evidence does not support.
+`attested` satisfies a criterion; `unverified` does not. **Never record `done` with `unverified`.** When the postcondition cannot be observed, record `partial` and put the unobservable condition in `Unresolved`.
 
 ### 5. Write the track entry
 
