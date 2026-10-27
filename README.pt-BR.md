@@ -122,10 +122,10 @@ Em cada checkpoint reconciliado, rotacione o TRACK ativo inteiro ao atingir 80.0
 Cada pasta de trabalho carrega seu ciclo de vida na primeira linha do `state.md`:
 
 - `active` — o único trabalho que a Skill pode avançar. No máximo um, em todo o repositório.
-- `frozen` — mantido como documentação. A Skill não entra nele, não o retoma e não reaproveita seu slug.
+- `frozen` — mantido como documentação; a manutenção restrita de evidências pode atualizar seu registro sem ativar execução nem reaproveitar seu slug.
 - `closed` — o relatório terminal foi escrito e o ciclo se encerrou.
 
-Iniciar um trabalho novo, ou nomear um congelado, torna aquele trabalho `active` e congela o anterior — de forma declarada, nunca silenciosa. Peça para congelar um trabalho a qualquer momento para estacioná-lo sem perder seus artefatos. `closed` não é o mesmo que `COMPLETED`: um trabalho pode encerrar como bloqueado ou falho.
+Iniciar trabalho novo, retomar explicitamente um trabalho `frozen` ou `closed` que ainda está em Specify ou Plan, ou iniciar uma continuação executável permitida e autorizada torna o trabalho `active` e congela o anterior de forma explícita. Nomear um trabalho para inspeção ou responder ao seu relatório não altera estados; nenhum outro trabalho é restaurado implicitamente. Peça para congelar um trabalho a qualquer momento para estacioná-lo sem perder seus artefatos. `closed` não é o mesmo que `COMPLETED`: um trabalho pode encerrar como bloqueado ou falho.
 
 ## Feita para trabalhos longos
 
@@ -178,3 +178,13 @@ Abra uma issue em [giuice/spec-to-done](https://github.com/giuice/spec-to-done).
 ## Licença
 
 [MIT](LICENSE) © 2026 giuice
+
+### Respostas a um trabalho bloqueado
+
+Uma resposta sobre impedimento registrado ou ação obrigatória pendente identifica o trabalho pelo contexto, mesmo fechado e sem slug. Inspeção e manutenção de evidências preservam o status de todos os trabalhos; só uma continuação executável válida e autorizada ativa o trabalho selecionado. "Continue" ou escolher uma solução não resolvem esgotamento. Fatos novos podem atualizar TRACK, SNAPSHOT e REPORT sem tentativa de tarefa; duplicatas reutilizam o relatório sem escrita. Ação opcional após conclusão não reabre trabalho.
+
+Esta rota vale para trabalho fechado ou congelado; uma execução ativa retoma pela recuperação comum. Antes de substituir REPORT, o arquivo anterior é copiado para o próximo arquivo numerado `reports/REPORT-000001.md`, relido e comparado; uma cópia falha impede a troca. Bastam leituras e escritas comuns de arquivo. Arquivos do histórico nunca são sobrescritos, exceto para completar uma cópia interrompida. Reuso não cria histórico.
+
+### Investigar uma falha repetida
+
+Quando duas correções aplicadas partem da mesma premissa causal e deixam persistir a mesma falha observada em condições comparáveis, a execução testa essa premissa explicitamente. Uma observação repetível deve distinguir explicações, com suporte e contradição definidos antes do teste. Revelar uma falha diferente pode ser progresso. A investigação limitada pode permanecer na tarefa atual; diagnóstico substancial respeita o planejamento e o orçamento de três tentativas por episódio existentes. Diagnóstico ou mitigação de sintomas não substituem o aceite. Todo brief do executor leva uma regra curta de falha repetida; o método completo só é enviado quando correções anteriores já falharam.

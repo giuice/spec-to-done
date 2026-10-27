@@ -122,6 +122,16 @@ Reasoning the performer needs; for T1, the grounding observation. A fact still
 [reported, unconfirmed] is not established: confirm it first, or pass it explicitly
 labeled as an unconfirmed report>
 
+<when relevant, include evidence of prior applied corrections, the failure and
+conditions after each, and the common causal premise explicitly as an unresolved
+hypothesis, not an established fact; this lets the performer apply the causal
+premise check across task boundaries>
+
+## Causal premise check
+<only when Established facts carries evidence of prior applied corrections: the full
+Causal premise check defined after this brief, verbatim; otherwise omit this section.
+The repeated-failure rule below applies in every brief>
+
 ## Return contract
 Do the work, then verify your own postcondition and return ONLY this block:
 
@@ -147,10 +157,29 @@ Rules:
 - Use `no_op` if the postcondition was already satisfied before you started.
 - If the task is impossible as written, return `blocked` or `failed` with the reason.
   Do not improvise a different task.
+- If two corrections you apply on the same causal premise leave the same observed
+  failure (same error, assertion, or symptom at the same point), stop corrections
+  based on that premise; a newly revealed failure can be progress. Test the premise
+  with an observation that distinguishes it from alternatives, then return the status
+  matching the actual state, with that evidence and the premise in `unresolved`.
 - Stop and return `blocked` before any destructive or irreversible action the user
   has not explicitly asked for.
 - Do not write to TRACK.md, PLAN.md, or the contract.
 ```
+
+### Causal premise check
+
+Trigger this check when **two actually applied corrections based on the same causal premise leave the same observed failure under relevant comparable conditions**. Show both occurrences by the same error, assertion, or symptom at the same point, with the correction and conditions for each. A red test alone is insufficient: resolving A and revealing B can be progress. Unexecuted checks, missing access, and pending coverage do not count. Compare the substantive premise and failure, regardless of renamed hypotheses or tasks.
+
+1. State the common causal premise in one sentence. Try to refute it with a repeatable observation whose possible results distinguish the competing explanations; state beforehand what would support or contradict it.
+2. Examine the distribution and conditions of failures, not only their count or magnitude: where and when does the failure occur or disappear, and what differs?
+3. Contradiction requires abandoning that premise and testing an alternative. Support requires the next "why?" and a check that distinguishes cause from consequence. An inconclusive result is not confirmation. Correct the causal condition instead of repeatedly compensating for symptoms; an authorized mitigation neither proves causal resolution nor lowers acceptance criteria.
+
+Stop further corrections that depend on an unsupported or refuted premise, not all investigation. Investigation may stay inside the current task when bounded by its `Done when`, `Covers`, constraints, authorization, and budget; the trigger does not require an immediate return or automatic `blocked`. If the postcondition remains unmet, return the existing status that describes the actual state, with evidence and the remainder, and let the existing gate decide continuation.
+
+Keep hypotheses in `Unresolved`, and the procedure, observations, and operational conclusions in `Evidence`; record testable facts, not internal deliberation. `Discovered` still permits only `[verified]` or `[reported, unconfirmed]`. Use the supplied correction evidence and your return fields, with no parallel counter or artifact. Substantial diagnosis follows existing planning and attempt limits: no hidden work, invented `Root`, fourth attempt, or mandatory diagnosis before an already-due terminal report. A diagnostic test never substitutes for acceptance verification.
+
+This section is the single definition for performers, inline execution, and verification. When a brief carries prior-correction evidence, transmit it in full inside the brief, never as a file reference; otherwise the brief's short repeated-failure rule suffices.
 
 Give the performer the smallest slice of the contract that matters. Dumping the whole SPEC into every brief defeats the purpose of dispatching.
 
@@ -161,6 +190,8 @@ The brief deliberately omits the task's `Reasoning` — that is the planner's ju
 The performer is not the judge of its own success. Before writing TRACK, independently establish that `Done when` holds now. Run `Verify by` or confirm current evidence that observes the claimed property. Inspect static properties; exercise operations and observe their results for behavior; check persistence after restarting; compare protected content before and after. Reuse suitable checks: a passing check that cannot detect the violation proves nothing.
 
 If `done` was claimed but the postcondition does not hold, record `failed` with the discrepancy. Do not soften it.
+
+Check relevant correction evidence against the Causal premise check above, including across tasks. Diagnosis or symptom mitigation alone does not establish the required postcondition; apply the existing status transitions and replan triggers.
 
 Confirm `discovered:` items against observable state when a cheap check exists and label them `[verified]`; otherwise use `[reported, unconfirmed]`. Unconfirmed discoveries are hypotheses, never established inputs or replanning premises.
 
@@ -319,6 +350,17 @@ Stop and ask the user — do not decide alone — when:
 
 Report the state through `references/report.md` rather than improvising a new objective.
 
+### Terminal blocker guidance
+
+Before reporting a blocker, make its guidance explicit in the task record or a task-named terminal/correction checkpoint. Every `replan exhausted` checkpoint must carry this guidance, with the plan version, `Root`, episode reference (root or `Reopens` entry), and stable `Blocker` identity:
+
+- `Unresolved`: the concrete impediment, the action or required outcome it prevents, and the consequence of leaving it unresolved. Do not invent risks or deadlines.
+- `Evidence` and `Verification`: the observations supporting that state and what remains unverified.
+- `User action`: the specific action, information, permission, or decision actually required from the user, when one is established. Do not delegate investigation the agent can perform within its existing authority and limits. If no action or solution is established, identify precisely the missing information or condition instead of inventing an option.
+- State the condition for resuming against that same `Blocker`. Include alternatives and a recommendation only when grounded in evidence. The contract-change options in `references/plan.md` apply to an unreachable acceptance criterion; a missing credential alone does not justify that menu.
+
+Use these existing fields; no new blocker category or status is needed. Continue independent authorized work only where the existing plan, dependencies, permissions, and limits already allow it. The guidance changes neither replan triggers nor the attempt budget.
+
 ---
 
 ## Track segments and the snapshot
@@ -381,13 +423,21 @@ Updated after: <TRACK file + entry heading> (plan version N)
 
 ## Resuming
 
-When execution history exists, read the contract, PLAN, available SNAPSHOT, and active TRACK; consult sealed entries only as needed. Reconcile before persisting the snapshot:
+For a report reply or resume request concerning `closed` or `frozen` work, or a missing-guidance request, use Evidence maintenance below first, and do not enter ordinary recovery or the execution loop until the root activates an authorized valid continuation. An `active` run resumes directly through ordinary recovery. Otherwise, when execution history exists, read the contract, PLAN, available SNAPSHOT, and active TRACK; consult sealed entries only as needed. Reconcile before persisting the snapshot:
 
 1. **Interrupted sealing:** if TRACK is absent after the move, locate the latest numbered sealed segment and create the opening entry from it and PLAN. If an opening entry is incomplete, preserve it and append a complete one. Do not move the sealed record again. If a copy-based interruption left duplicated history, first establish the intended sealed segment and compare its complete bytes with the active prefix: only an exact match permits removing that prefix; retain every subsequent byte after a new opening. A matching heading alone proves nothing. Preserve both files on a mismatch or uncertain identity and resolve the ambiguity before continuing; never overwrite a sealed file.
 2. **Task/gate/PLAN:** locate the latest task and its effective gate, ignoring segment-opening markers. Execution-to-TRACK uses step 2's side-effect check before recording; TRACK-to-gate appends a task-named missing gate with ID reservation, without redispatch. For `plan holds`, finish PLAN maintenance. For `replan required`, if the higher PLAN version already contains that task's valid future-only replan, append its missing `replan done (plan version N)` checkpoint; at the same version invoke the replanner. Preserve IDs, lineage, and all existing entries; conflicting versions require resolution before continuation.
 3. **Resume state:** after reconciliation, finish any due sealing, then persist SNAPSHOT using the incremental/full-rebuild distinction above. An outdated pointer to moved TRACK content is resolved in its sealed segment. Never dispatch a recorded task ID.
 
-If the effective task gate says `replan exhausted`, it is terminal until resolution of its `Blocker: BLK-<slug>-<root-task-id>` is verified by ordinary inspection or explicitly attested by the user. The evidence must match that stable blocker identity. Append the resolution evidence and a reopening checkpoint, invoke the replanner, and start a same-SPEC new `Reopens:` episode under the same `Root:`; preserve all earlier entries and retain the exhausted lineage as historical evidence.
+### Evidence maintenance
+
+This narrow route examines an identified work's recorded impediment or required pending action, including a legitimate PARTIAL outcome, without activating execution. It leaves every work's `state.md`, PLAN, task status, effective gate, and attempt count unchanged: no dispatch, replan, new `Reopens`, or general recovery. Optional follow-up after COMPLETED is not a pending impediment. Read the relevant REPORT, task, episode, blocker, and corrections; ambiguity returns to the root without changing artifacts.
+
+Compare the reply with prior corrections before checking anything. With no new claim, evidence, relevant state change, or missing guidance, reuse the adequate persisted REPORT through the root; write nothing and repeat no verification. Otherwise perform only authorized, bounded checks of the claimed resolution. For `replan exhausted`, only verified or explicitly attested resolution of the same `Blocker: BLK-<slug>-<root-task-id>` permits reopening. A request to "continue", a choice of approach, or permission to investigate is not resolution; choosing a solution does not establish its execution.
+
+Append materially new findings, including a check that fails to resolve the blocker, in a correction naming task, plan version, `Root`, episode, and `Blocker` when applicable. Record evidence considered, verification (or its absence), result, and missing condition; retain the gate. Supply missing terminal guidance from established facts. If a solution is unknown, record the concrete information/condition still missing; do not invent a remedy or repeat the same guidance request. Refresh SNAPSHOT from that correction without changing PLAN or running its gate. If no valid continuation is available, return to the root for the reporter to preserve and replace the stale REPORT, then emit the replacement exactly, with all work statuses unchanged.
+
+When current evidence and permissions establish an actual valid continuation, return its task, effective gate, and supporting evidence to the root for activation before execution. New evidence alone is insufficient. After activation, apply ordinary reconciliation above. For an exhausted episode, use the recorded resolution evidence, invoke the replanner, and append `replan reopened (plan version N)` for a same-SPEC `Reopens:` episode under the same `Root:`. If resolution evidence and a matching higher-version Reopens PLAN already exist, append only the missing checkpoint; a higher version alone proves nothing. Reconcile TRACK/PLAN, finish due sealing, and update SNAPSHOT, especially Blockers and Open lineages references, before dispatch. Other gates retain their existing routes and budgets; REPORT status alone creates no exhaustion or reopening.
 
 Do not re-run completed tasks. Re-verify a completed task only when a later discovery may have invalidated its postcondition.
 

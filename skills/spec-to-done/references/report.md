@@ -97,6 +97,8 @@ These facts may never be silently omitted when present:
 
 Read all relevant TRACK fields — `State delta`, `Evidence`, `Verification`, `Unresolved`, `Risk`, `User action`, `Deviation`, and material `Assumption` — before deciding the checksum. Filenames may follow a consequence for traceability; they never replace it. This checksum is a coverage check, not a word-count target.
 
+For blocker guidance, join the task with applicable terminal/correction checkpoints and use the latest grounded guidance for the same task, episode, and blocker. Carry the impediment, affected outcome, consequence, missing condition, and resumption condition into the sections below; USER ACTION includes only required user action. Alternatives/recommendations need evidence. If guidance is missing, return to the root naming the specific gap for Evidence maintenance in Execute; do not investigate. A correction identifying the concrete unknown condition satisfies this request even when no solution is known; use it rather than requesting the same guidance again.
+
 ## 4. Distinguish state from evidence
 
 Keep these states separate:
@@ -140,15 +142,23 @@ Forbidden:
 - duplicating a fact; and
 - hiding a failure, unverified state, destructive consequence, or residual risk.
 
-Construct the concise report body once. When a working directory exists, write `spec-interview/<slug>/REPORT.md` with a header containing the current date and exactly one status, followed by that body. Deliver the same classification and body in the conversation; the file header is persistence metadata, not a second semantic result. If no working directory exists, deliver the conversation report only.
+New material TRACK information requires a new report body. With unchanged material state and adequate guidance, confirm and reuse the persisted body without writing or archiving. Immutability applies to each body; replacing the current projection is permitted only through Report preservation below.
+
+For a new report, construct the concise body once. When a working directory exists, persist `spec-interview/<slug>/REPORT.md` with the current date and exactly one status in its header, followed by that body, using preservation below. The conversation receives that same body; the header is persistence metadata. Reuse skips construction and writes. Without a working directory, deliver only the conversation report.
 
 Mechanical terminal handoff is mandatory:
 
-1. Construct one body and do not mutate it afterward.
-2. Persist the header followed by that body.
-3. Emit exactly the persisted body, byte-for-byte, as the developer response—without the file header and without any prefix, suffix, summary, transcript, routing detail, or replacement validation narration.
+1. Construct one body without further mutation, or reuse the adequate body already persisted.
+2. For a new body, preserve the old REPORT and persist the header followed by the new body as below. Reuse confirms existing persistence and requires no rewrite.
+3. Return to the root for finalization and emission of exactly the persisted body, byte-for-byte—without the file header or any prefix, suffix, summary, transcript, routing detail, or replacement validation narration. Evidence maintenance leaves all work statuses unchanged.
 
 Never recreate the response from memory after writing `REPORT.md`. A paraphrase with equivalent meaning still violates the single-body output contract.
+
+### Report preservation
+
+Before replacing an existing REPORT, copy the whole file, header included, to this work's `reports/REPORT-<nnnnnn>.md`, numbered one above the highest existing archive (`000001` first). Read the copy back and compare it with the current REPORT; replace REPORT only after they match. If the copy cannot be completed, leave REPORT untouched and do not finalize. Use only ordinary file reads and writes; no hash, script, or other tool is required.
+
+Archives are immutable, with two recovery cases after an interruption. If the highest archive already equals the current REPORT, preservation is done: write the new REPORT without archiving again. If it is a strict prefix of the current REPORT, it is an incomplete copy: complete it in place, then compare. Any other existing archive is never overwritten. Initial publication and unchanged-body reuse create no archive.
 
 ## Shapes to follow
 

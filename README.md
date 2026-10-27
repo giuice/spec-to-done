@@ -122,10 +122,10 @@ At each reconciled checkpoint, rotate the whole active TRACK at 80,000 bytes or 
 Each work folder carries its lifecycle in the first line of `state.md`:
 
 - `active` — the one work the Skill may advance. At most one, repository-wide.
-- `frozen` — kept as documentation. The Skill does not route into it, resume it, or reuse its slug.
+- `frozen` — kept as documentation; narrow evidence maintenance may update its record without activating execution or reusing its slug.
 - `closed` — its terminal report was written and the cycle ended.
 
-Starting new work, or naming a frozen one, makes that work `active` and freezes the previous one — stated, never silent. Ask to freeze a work at any time to park it without losing its artifacts. `closed` is not the same as `COMPLETED`: a work can close as blocked or failed.
+Starting new work, explicitly resuming a frozen or closed work that is still in Specify or Plan, or entering a permitted, authorized execution continuation makes it `active` and explicitly freezes the previous work. Naming work for inspection or replying to its report does neither; no other work is restored implicitly. Ask to freeze a work at any time to park it without losing its artifacts. `closed` is not the same as `COMPLETED`: a work can close as blocked or failed.
 
 ## Designed for long-running work
 
@@ -178,3 +178,13 @@ Open an issue at [giuice/spec-to-done](https://github.com/giuice/spec-to-done).
 ## License
 
 [MIT](LICENSE) © 2026 giuice
+
+### Replies to blocked work
+
+A reply concerning a recorded impediment or required pending action identifies its work from context, even when closed and without a slug. Inspection and evidence maintenance leave every work's status unchanged; only an authorized valid execution continuation activates the selected work. "Continue" or a chosen solution alone does not resolve exhaustion. New findings can update TRACK, SNAPSHOT and REPORT without a task attempt; duplicates reuse the current report without writes. Optional follow-up after completion does not reopen work.
+
+This route applies to closed or frozen work; an active run resumes through its ordinary recovery. Before REPORT is replaced, the previous file is copied to the next numbered `reports/REPORT-000001.md` archive, read back and compared; a failed copy prevents replacement. Only ordinary file reads and writes are needed. Archives are never overwritten, except completing a copy left incomplete by an interruption. Reuse creates no archive.
+
+### Investigating a repeated failure
+
+When two applied corrections share a causal premise and leave the same observed failure under comparable conditions, execution tests that premise explicitly. A repeatable observation must distinguish explanations, with support and contradiction defined beforehand. Revealing a different failure can be progress. Bounded investigation can stay in the current task; substantial diagnosis keeps the existing planning and three-attempt episode budget. Diagnostic success or symptom mitigation does not replace acceptance. Every performer brief carries a short repeated-failure rule; the full method is sent only when earlier corrections already failed.

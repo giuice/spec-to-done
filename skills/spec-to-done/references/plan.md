@@ -75,6 +75,8 @@ Implement caching                     Add a cache abstraction with get, set, and
 - State the intended result and concrete parameters, not mechanics. “The payment client fails a request after 30 seconds” is a plan; “open `PaymentClient.cs` and set `Timeout`” is an action list.
 - A genuinely unknown branch may be explicit in plain language, such as “If the migration tool supports rollback, use it; otherwise create a rollback script.” Avoid nested or ambiguous conditions.
 
+Prefer diagnosis and correction as one verifiable outcome when both honestly fit the task. Substantial diagnosis uses the existing decomposition and budget; it cannot hide work, invent a new `Root` for the same remainder, grant a fourth attempt, or delay an already-due terminal report. A diagnostic result does not replace the contract's acceptance check.
+
 ## 3. Make every task checkable
 
 Every task has a state-based `Done when` and an evidence-producing `Verify by`.
@@ -177,6 +179,8 @@ Start the first future task’s reasoning with an explicit reflection:
 
 Only TRACK discoveries marked verified may become task premises. An unconfirmed report needs its own validation task or stays out of future-plan facts.
 
+Use the Causal premise check in `references/execute.md` when its repeated-failure trigger holds. Carry forward its evidence and unresolved hypotheses; do not reissue a correction dependent on an unsupported or refuted premise under a new name. This check changes neither the replan triggers nor lineage and episode limits.
+
 ### Then regenerate only invalid future work
 
 1. Identify remaining tasks that still hold and those invalidated by current verified state.
@@ -213,6 +217,7 @@ Run this before writing an initial plan, a materially replanned plan, or checkpo
 - Every task carries Root, and Root is unchanged across every task in one lineage: Pass / Missing
 - Surviving IDs remain stable and dependencies are repointed away from attempted tasks: Pass / Missing / N/A
 - Success criteria are unchanged from the SPEC (replan only): Pass / Missing / N/A
+- Relevant repeated-correction evidence satisfies the Causal premise check in references/execute.md; no unsupported/refuted premise is reused, diagnosis stays within existing task/lineage budgets, and diagnostic tests do not replace acceptance: Pass / Missing / N/A
 - No strategy version changed during maintenance; completed work was removed and verified refinements stay within the permitted fields, preserve required work and do not weaken verification: Pass / Missing / N/A
 
 Verdict: Ready / Not ready
